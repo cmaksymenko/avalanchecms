@@ -1,10 +1,24 @@
 # Avalanche CMS
 
-Avalanche CMS is a specialized content management system designed for curating and enhancing AI-generated artwork. Useful for anyone engaged in visual exploration and digital art creation within the generative AI space.
+## About
 
-## Project Status: Bootstrapping
+Avalanche CMS is a specialized **content management system** designed for **curating and enhancing AI-generated artwork** in a streamlined way. 
 
-**Note:** Avalanche CMS is currently in the bootstrapping phase. This initial stage involves setting up the fundamental components and technologies that form the core of the project. As such, the current state represents the early steps in development, focusing on establishing the basic infrastructure and functionalities. I appreciate your patience and interest as I work on building and refining it.
+It provides a centralized platform to capture and organize the non-linear evolution of prompts, associated generated images, and creative decisions. It is useful for anyone engaged in visual exploration and digital art creation within the generative AI space.
+
+## Project Status
+
+Avalanche CMS is in its early development stages. The focus is currently on establishing the basic components and technologies essential for the project's foundation. Below is an outline of planned future developments - updates and advancements will be shared as the project evolves.
+
+## Planned Features
+
+### Image Echoing
+
+This workflow will enable the tracking of all prompt refinement steps involved in replicating original pictures using generative AI - serving as the foundation for new, original artworks. See [image-echoing.md](/docs/image-echoing.md) for further details.
+
+- Includes the possibility to upload and organize source material.
+- Provides an interactive graph interface, which displays the evolution of prompts and their generated images in a 2D space view for easy exploration and experimentation. Possibility to add comments, use custom tags for filtering, and outcome rating.
+- Integration of AI tools to support the creative process and decision making. May include integration with Midjourney's Discord interface.
 
 ## Server
 - The application server component of Avalanche CMS is a Spring Boot application, using Java 21 LTS.
