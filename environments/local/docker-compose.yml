@@ -85,14 +85,14 @@ services:
       KC_DB_URL_HOST: postgres
       KC_DB_URL_PORT: 5432
       KC_DB_URL_DATABASE: keycloak
-      KC_DB_USERNAME: admin
-      KC_DB_PASSWORD_FILE: /run/secrets/postgres-admin-user-secret
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD_FILE: /run/secrets/postgres-keycloak-db-user-secret
       KC_DB_URL_SSL_ENABLED: false
     volumes:
       - ./keycloak-entrypoint.sh:/opt/keycloak/entrypoint.sh:ro
       # Secret file mounts
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/keycloak-admin-user-secret:ro
-      - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/postgres-admin-user-secret:ro
+      - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/postgres-keycloak-db-user-secret:ro
     ports:
       - "8081:8080"
       - "8443:8443"
