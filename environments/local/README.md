@@ -17,10 +17,10 @@ This Docker Compose setup is tailored for local development and deploys the data
 ## Service Descriptions
 
 ### PostgreSQL Database
-The `postgres` service is the used database management system and is configured with environment variables. These include `POSTGRES_DB` for the database name (`avalanche-cms-db`) and `POSTGRES_USER` for the admin username (`admin`). The database's administrative password is securely handled through a Docker secret file (see local development setup.py script for creation). The service exposes port 5432 for database connection.
+The `postgres` service is the used database management system and is configured with environment variables. These include `POSTGRES_DB` for the database name (`avalanchecms`) and `POSTGRES_USER` for the admin username (`admin`). The database's administrative password is securely handled through a Docker secret file (see local development setup.py script for creation). The service exposes port 5432 for database connection.
 
 ### pgAdmin for Database Management
-`pgadmin` serves as web-based administration interface for the PostgreSQL database. It's configured with an admin username (`admin@avalanche-cms.com`). The admins password is securely handled through a Docker secret file (see local development setup.py script for creation). The service, which depends on `postgres` (starts after), is accessible through http://localhost:8080.
+`pgadmin` serves as web-based administration interface for the PostgreSQL database. It's configured with an admin username (`admin@avalanchecms.com`). The admins password is securely handled through a Docker secret file (see local development setup.py script for creation). The service, which depends on `postgres` (starts after), is accessible through http://localhost:8080.
 
 **Note:** pgAdmin requires initial configuration to connect to the PostgreSQL server. Upon first login, you must manually add the PostgreSQL server to pgAdmin.
 
@@ -37,5 +37,5 @@ The `postgres` service is the used database management system and is configured 
 - **pgadmin-data:** Used by the pgAdmin service, this volume maintains pgAdmin's configuration and state.
 
 ## Network Configuration
-A custom bridge network, `avalanche-cms` interconnects the services, facilitating secure and efficient container-to-container communication.
+A custom bridge network, `avalanchecms` interconnects the services, facilitating secure and efficient container-to-container communication.
 
