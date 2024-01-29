@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script is designed for dynamically loading environment variables and secrets before Keycloak is started.
+# It securely retrieves user passwords from designated secret files.
+
 
 # Exit on error, unset variables and errors in pipelines
 set -eou pipefail
