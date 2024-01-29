@@ -30,4 +30,4 @@ This workflow will enable the tracking of all prompt refinement steps involved i
 
 - The local development stack includes a PostgreSQL database, Keycloak for identity and access management, and pgAdmin for database administration.
 - This stack can be deployed locally using Docker Compose.
-- Python 3 is required for the initial setup. Detailed instructions and additional prerequisites are available in the [/environment/local/README.md](/environment/local/README.md).
+- Python 3 is required for the initial setup. Detailed instructions and additional prerequisites are available in the [/environments/local/README.md](/environments/local/README.md).
