@@ -1,4 +1,4 @@
-# Avalanche Image Echoing Workflow
+# Avalanche CMS Image Echoing Workflow
 
 ## Problem Statement
 
@@ -8,7 +8,7 @@ An ideal solution would streamline the creative process, allow organization of s
 
 ## Planned Solution with Avalanche CMS
 
-Avalanche provides with the Image Echoing workflow a streamlined approach to this creative process. It offers a centralized platform incorporating the following solutions:
+Avalanche CMS provides with the Image Echoing workflow a streamlined approach to this creative process. It offers a centralized platform incorporating the following solutions:
 
 - **Upload and Organize Original Images**: Users can upload and organize the original images they are working from. This allows them to easily reference and compare their source material with the generated images, keeping everything related to a project in one place.
 
