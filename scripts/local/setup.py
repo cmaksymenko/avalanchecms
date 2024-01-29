@@ -32,15 +32,15 @@ def find_project_root(current_file):
 def generate_random_password(length=SECRET_DEFAULT_LEN):
     return ''.join(random.choice(SECRET_CHAR_POOL) for i in range(length))
 
-def prompt_for_password(description, auto=False):
-    if auto:
-        return generate_random_password()
-    else:
-        choice = input(f"Do you want to generate a random password for {description}? [Y/n]: ").strip().lower()
-        if choice in ['n', 'no']:
-            return input(f"Enter your desired password for {description}: ").strip()
-        else:
-            return generate_random_password()
+def prompt_for_secret(description, auto=False):
+    if not auto:
+        user_input = input(f"Enter secret for {description} (press enter for random): ").strip()
+        if user_input: # This will be False for empty or all-whitespace strings, or if the user pressed return
+            return user_input
+
+    print(f"Generating a random secret for {description}...")
+    return generate_random_password()
+
 
 def create_secret_file(path, content):
     if not os.path.exists(path):
@@ -68,7 +68,7 @@ def main():
     # Loop through each secret, prompt and create env file
     for secret in secrets:
         secret_file = os.path.join(secrets_path, secret["file"])
-        secret_value = prompt_for_password(secret["name"], args.auto)
+        secret_value = prompt_for_secret(secret["name"], args.auto)
         create_secret_file(secret_file, secret_value)
 
     print("Local development environment setup for Avalanche CMS is complete.")
