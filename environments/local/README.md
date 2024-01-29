@@ -1,41 +1,66 @@
-# Docker Compose for Avalanche CMS - Local Development Database
+# Avalanche CMS Local Stack
 
-## Overview
-This Docker Compose setup is tailored for local development and deploys the database. It comprises two services:
-- `postgres`: PostgreSQL database utilizing the Alpine image for enhanced efficiency and security.
-- `pgadmin`: A user-friendly, web-based administration tool for PostgreSQL.
+## Introduction
 
-## Features
-- Secure management of sensitive data through Docker secret files.
-- Persistent volumes for both the database and pgAdmin, ensuring data durability.
+Welcome to the Avalanche CMS local stack guide. This document outlines the steps to configure and run the stack, which includes PostgreSQL, pgAdmin, and Keycloak.
 
-## Usage
-- Start the services by running `docker compose up` in this directory.
-- Alternatively, execute `docker compose -f database/postgres/docker-compose.yml up` in the repository's root directory.
-- Use `-d` to launch in detached mode and monitor via Docker Desktop.
+## Prerequisites
 
-## Service Descriptions
+This setup is primarily designed for and tested on a Windows 11 development environment. However, thanks to the containerized approach and the technology stack used, it should also run seamlessly on Linux environments. Ensure the following software is installed:
 
-### PostgreSQL Database
-The `postgres` service is the used database management system and is configured with environment variables. These include `POSTGRES_DB` for the database name (`avalanchecms`) and `POSTGRES_USER` for the admin username (`admin`). The database's administrative password is securely handled through a Docker secret file (see local development setup.py script for creation). The service exposes port 5432 for database connection.
+- **Docker Desktop**: [Download Docker Desktop](https://www.docker.com/products/docker-desktop) (For Windows 11)
+- **Python 3**: [Download Python 3](https://www.python.org/downloads/) (Cross-platform)
+- **Git Bash**: Recommended for executing scripts and Docker commands on Windows. [Download Git Bash](https://gitforwindows.org/). Linux users can use bash.
 
-### pgAdmin for Database Management
-`pgadmin` serves as web-based administration interface for the PostgreSQL database. It's configured with an admin username (`admin@avalanchecms.com`). The admins password is securely handled through a Docker secret file (see local development setup.py script for creation). The service, which depends on `postgres` (starts after), is accessible through http://localhost:8080.
+## Stack Components
 
-**Note:** pgAdmin requires initial configuration to connect to the PostgreSQL server. Upon first login, you must manually add the PostgreSQL server to pgAdmin.
+The Avalanche CMS local development stack is based on Docker Compose and is composed of:
 
-### Configuring pgAdmin
-- Log in to pgAdmin using admin credentials.
-- Right-click on 'Servers' in the pgAdmin dashboard and select 'Create' -> 'Server'.
-- In the 'General' tab, give a meaningful name to the server (e.g., `Avalanche CMS DB`).
-- Switch to the 'Connection' tab and enter `postgres` as the host (the service name in Docker Compose acts as the hostname).
-- Fill in the PostgreSQL admin user and secret details.
-- Save the configuration to connect to the PostgreSQL database. The configuration is persisted for later use.
+- **PostgreSQL Database (Version 16)**: Exposed on port 5432.
+- **pgAdmin (Version 4)**: For database administration, accessible on port 8080.
+- **Keycloak (Version 23 - Quarkus)**: Administration UI available on port 8081.
 
-## Volumes
-- **postgres-data:** This volume is dedicated to PostgreSQL data, ensuring that all database information is persistently stored across device restarts.
-- **pgadmin-data:** Used by the pgAdmin service, this volume maintains pgAdmin's configuration and state.
+## Setup Instructions
 
-## Network Configuration
-A custom bridge network, `avalanchecms` interconnects the services, facilitating secure and efficient container-to-container communication.
+### 1. Generate Secrets
 
+Start by generating necessary secret files for initial deployment (use `-a` for automatic generation of secrets):
+
+```
+python scripts/local/setup.py
+```
+
+### 2. Start the Stack
+
+To initialize / start the Avalanche CMS stack, run:
+
+```
+docker compose up
+```
+
+- Optionally, add `-d` for detached mode.
+- For log monitoring, run in a shell like Git Bash.
+
+### 3. Access Services
+
+- **pgAdmin**:
+  - URL: [http://localhost:8080](http://localhost:8080/)
+  - Username: `admin@avalanchecm.com`
+  - Password: Found in *.secrets/pgadmin-admin-user-secret.env*
+- **Keycloak Admin UI**:
+  - URL: [http://localhost:8081](http://localhost:8081/)
+  - Username: `admin`
+  - Password: Found in *.secrets/keycloak-admin-user-secret.env*
+
+### 4. Setting up pgAdmin
+
+- On initial startup, pgAdmin requires manual database connection setup.
+- Connection Details:
+  - Username: `admin`, secret found in *.secrets/postgres-admin-user-secret*
+  - Hostname: `postgres`
+  - Port: `5432`
+
+## Persistence
+
+- PostgreSQL and pgAdmin data remain persistent across restarts, thanks to Docker volumes.
+- Keycloak's data is persistent as well, utilizing PostgreSQL for storage.
