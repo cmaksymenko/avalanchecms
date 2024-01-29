@@ -1,87 +1,65 @@
-# Docker Compose for Avalanche CMS - Local Development Database
-# ---------------------------------------------------------------------
-# This Docker Compose file configures the local development environment 
-# for Avalanche CMS Database. It includes:
-# - 'postgres': PostgreSQL database using Alpine image for efficiency.
-# - 'pgadmin': Web-based PostgreSQL administration tool.
-#
-# Notes:
-# - Uses docker secret files for secure management of sensitive data.
-# - Persistent volumes for database and pgAdmin data.
-#
-# Usage:
-# - Run "docker compose up" in this directory to start the services.
-# - Or run "docker compose -f database/postgres/docker-compose.yml up" 
-#   in the repository root directory.
-# - Run -d for detached mode, observe in Docker Desktop.
-# ---------------------------------------------------------------------
+# Avalanche CMS Local Stack
 
 version: '3.8'
 name: avalanchecms
 
-# Network Configuration
+# Network setup
 networks:
   avalanchecms:
-    driver: bridge  # Using bridge driver for inter-container communication
+    driver: bridge  # Bridge driver for container communication
 
-# Service Definitions
+# Services
 services:
 
-  # PostgreSQL Database Service
+  # PostgreSQL Database
   postgres:
-
     container_name: postgres
-
-    image: postgres:16-alpine  # Using Alpine for a smaller, more secure base image
-
+    image: postgres:16-alpine  # Alpine-based image for efficiency and security
     environment:
       POSTGRES_DB: admin
-      POSTGRES_USER: admin # Database admin username
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-admin-user-secret  # Database admin secret file
-
+      POSTGRES_USER: admin # Admin user credentials
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-admin-user-secret # Admin password from secret file
     volumes:
-
       - postgres-data:/var/lib/postgresql/data
       - ./setup-postgres-db.sh:/docker-entrypoint-initdb.d/setup-postgres-db.sh
-
-      # Secret file mounts
+      # Mounting secret files
       - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/postgres-admin-user-secret:ro  
       - ./../../.secrets/postgres-avalanchecms-db-user-secret.env:/run/secrets/postgres-avalanchecms-db-user-secret:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/postgres-keycloak-db-user-secret:ro
-
     ports:
-      - "5432:5432"  # Exposing PostgreSQL default port
-
+      - "5432:5432" # PostgreSQL default port
     restart: always
-
     networks:
       - avalanchecms
 
-  # pgAdmin Service for Database Management
+  # pgAdmin Service for database management
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:8
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@avalanchecms.com  # Admin username
-      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin-admin-user-secret  # Admin secret file
+      PGADMIN_DEFAULT_EMAIL: admin@avalanchecms.com # Admin username
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin-admin-user-secret # Admin password from secret file
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+      # Mounting secret file
       - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/pgadmin-admin-user-secret:ro  # Secret file mount
     ports:
-      - "8080:80"  # Exposing pgAdmin on http://localhost:8080/
+      - "8080:80" # Access pgAdmin at http://localhost:8080/
     restart: always
     depends_on:
-      - postgres  # Ensuring pgAdmin starts after PostgreSQL
+      - postgres # Start after PostgreSQL
     networks:
       - avalanchecms
 
+  # Keycloak for identity and access management (IAM)
   keycloak:
     container_name: keycloak
     image: quay.io/keycloak/keycloak:23.0
-    command: ["start-dev"]
+    command: ["start-dev"] # Development mode, never use for production
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak-admin-user-secret
+      KEYCLOAK_ADMIN: admin # Admin username
+      KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak-admin-user-secret # Admin password from secret file
+      # Database connection
       KC_DB_URL_HOST: postgres
       KC_DB_URL_PORT: 5432
       KC_DB_URL_DATABASE: keycloak
@@ -90,20 +68,21 @@ services:
       KC_DB_URL_SSL_ENABLED: false
     volumes:
       - ./keycloak-env-loader.sh:/opt/keycloak/keycloak-env-loader.sh:ro
-      # Secret file mounts
+      # Mounting secret files
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/keycloak-admin-user-secret:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/postgres-keycloak-db-user-secret:ro
     ports:
-      - "8081:8080"
+      - "8081:8080" # Access Kecloak admin UI at http://localhost:8081/
       - "8443:8443"
     restart: always
     depends_on:
-      - postgres
+      - postgres # Start after PostgreSQL
     networks:
       - avalanchecms
+    # Custom entry point to load dynamic env vars and secrets
     entrypoint: /opt/keycloak/keycloak-env-loader.sh
       
-# Persistent volumes
+# Persistent storage volumes
 volumes:
-  postgres-data:  # Volume for PostgreSQL data
-  pgadmin-data:   # Volume for pgAdmin data
+  postgres-data: # Stores PostgreSQL data
+  pgadmin-data: # Stores pgAdmin data
