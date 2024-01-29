@@ -20,12 +20,14 @@ This workflow will enable the tracking of all prompt refinement steps involved i
 - Provides an interactive graph interface, which displays the evolution of prompts and their generated images in a 2D space view for easy exploration and experimentation. Possibility to add comments, use custom tags for filtering, and outcome rating.
 - Integration of AI tools to support the creative process and decision making. May include integration with Midjourney's Discord interface.
 
-## Server
-- The application server component of Avalanche CMS is a Spring Boot application, using Java 21 LTS.
-- The server codebase is located in the `/server` directory of the repository.
-- For detailed setup and build instructions, see [server README.md](/server/README.md) in the `/server` directory.
+## Application Server
 
-## Local Development
-- Requires Python 3, Java 21, Maven, Docker Desktop
-- Run the `python scripts/local-dev/setup.py` for initialization of your local development setup.
-- A Docker Compose Stack for local database deployment of a PostgreSQL database and pgAdmin is provided in `\database\postgres`. See [README.md](/database/postgres/README.md) in the `\database\postgres` directory.
+- An application server will be built using Java 21 and Spring Boot 3.3, utilizing Maven 3.9 for building.
+- The server's codebase can be found in the `/server` directory of the repository.
+- For more information on setup and build procedures, refer to the [server README.md](/server/README.md) located in the `/server` directory.
+
+## Local Development Environment
+
+- The local development stack includes a PostgreSQL database, Keycloak for identity and access management, and pgAdmin for database administration.
+- This stack can be deployed locally using Docker Compose.
+- Python 3 is required for the initial setup. Detailed instructions and additional prerequisites are available in the [/environment/local/README.md](/environment/local/README.md).
