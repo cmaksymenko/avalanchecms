@@ -6,14 +6,14 @@ import string
 from pathlib import Path
 import argparse
 
-# Low-risk characters for secure passwords: minimal escaping, high compatibility.
-SECRET_LOW_RISK_SPECIAL_CHARS = "*+-=^_~"
+# Special characters for secure passwords
+SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
 
 # Pool of characters for generating secrets: includes letters, digits, and low-risk special characters.
-SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_LOW_RISK_SPECIAL_CHARS
+SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
 
 # Default length for generated secrets
-SECRET_DEFAULT_LEN = 20
+SECRET_DEFAULT_LEN = 22
 
 # Secrets and filenames
 secrets = [
