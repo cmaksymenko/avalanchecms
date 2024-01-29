@@ -42,7 +42,7 @@ services:
     volumes:
 
       - postgres-data:/var/lib/postgresql/data
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./setup-postgres-db.sh:/docker-entrypoint-initdb.d/setup-postgres-db.sh
 
       # Secret file mounts
       - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/postgres-admin-user-secret:ro  
@@ -89,7 +89,7 @@ services:
       KC_DB_PASSWORD_FILE: /run/secrets/postgres-keycloak-db-user-secret
       KC_DB_URL_SSL_ENABLED: false
     volumes:
-      - ./keycloak-entrypoint.sh:/opt/keycloak/entrypoint.sh:ro
+      - ./keycloak-env-loader.sh:/opt/keycloak/keycloak-env-loader.sh:ro
       # Secret file mounts
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/keycloak-admin-user-secret:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/postgres-keycloak-db-user-secret:ro
@@ -101,7 +101,7 @@ services:
       - postgres
     networks:
       - avalanchecms
-    entrypoint: /opt/keycloak/entrypoint.sh
+    entrypoint: /opt/keycloak/keycloak-env-loader.sh
       
 # Persistent volumes
 volumes:
