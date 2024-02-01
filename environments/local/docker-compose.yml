@@ -17,7 +17,7 @@ services:
     image: postgres:16-alpine  # Alpine-based image for efficiency and security
     environment:
       POSTGRES_DB: admin
-      POSTGRES_USER: admin # Admin user credentials
+      POSTGRES_USER: postgres_admin # Admin user credentials
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres-admin-user-secret # Admin password from secret file
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -39,7 +39,9 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@avalanchecms.com # Admin username
       PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin-admin-user-secret # Admin password from secret file
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/avalanchecms-servers.json
     volumes:
+      - ./pgadmin-servers.json:/pgadmin4/avalanchecms-servers.json:ro
       - pgadmin-data:/var/lib/pgadmin
       # Mounting secret file
       - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/pgadmin-admin-user-secret:ro  # Secret file mount
@@ -81,7 +83,7 @@ services:
       - avalanchecms
     # Custom entry point to load dynamic env vars and secrets
     entrypoint: /opt/keycloak/keycloak-env-loader.sh
-      
+   
 # Persistent storage volumes
 volumes:
   postgres-data: # Stores PostgreSQL data

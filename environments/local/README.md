@@ -54,11 +54,7 @@ docker compose up
 
 ### 4. Setting up pgAdmin
 
-- On initial startup, pgAdmin requires manual database connection setup.
-- Connection Details:
-  - Username: `admin`, secret found in *.secrets/postgres-admin-user-secret*
-  - Hostname: `postgres`
-  - Port: `5432`
+[pgAdmin](http://localhost:5050/) comes preconfigured with a server connection to the local PostgreSQL instance. For security reasons, the only thing you need to manually enter is the PostgreSQL admin user secret found in */.secrets/postgres-admin-user-secret.env*.
 
 ## Persistence
 
