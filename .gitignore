@@ -65,3 +65,4 @@ Thumbs.db        # Windows thumbnail cache
 # Docker Volumes
 # Docker volumes can contain sensitive data, especially if used for databases or storing secrets
 /docker/volumes/
+/.vscode
