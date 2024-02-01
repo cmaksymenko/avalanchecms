@@ -64,7 +64,7 @@ create_db_and_user() {
     local db_password=$(get_secret_from_file "$secret_file") || exit 1
 
     # execute PostgreSQL commands
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<EOSQL
+    psql -v ON_ERROR_STOP=1 --dbname "$POSTGRES_DB" --username "$POSTGRES_USER" <<EOSQL
         CREATE USER $user_name WITH PASSWORD '$db_password';
         CREATE DATABASE $db_name;
         ALTER DATABASE $db_name OWNER TO $user_name;
