@@ -17,8 +17,8 @@ This setup is primarily designed for and tested on a Windows 11 development envi
 The Avalanche CMS local development stack is based on Docker Compose and is composed of:
 
 - **PostgreSQL Database (Version 16)**: Exposed on port 5432.
-- **pgAdmin (Version 4)**: For database administration, accessible on port 8080.
-- **Keycloak (Version 23 - Quarkus)**: Administration UI available on port 8081.
+- **pgAdmin (Version 4)**: For database administration, accessible on port 5050.
+- **Keycloak (Version 23 - Quarkus)**: Administration UI available on port 8080.
 
 ## Setup Instructions
 
@@ -44,21 +44,17 @@ docker compose up
 ### 3. Access Services
 
 - **pgAdmin**:
-  - URL: [http://localhost:8080](http://localhost:8080/)
+  - URL: [http://localhost:5050](http://localhost:5050/)
   - Username: `admin@avalanchecm.com`
   - Password: Found in *.secrets/pgadmin-admin-user-secret.env*
 - **Keycloak Admin UI**:
-  - URL: [http://localhost:8081](http://localhost:8081/)
+  - URL: [http://localhost:8080](http://localhost:8080/)
   - Username: `admin`
   - Password: Found in *.secrets/keycloak-admin-user-secret.env*
 
 ### 4. Setting up pgAdmin
 
-- On initial startup, pgAdmin requires manual database connection setup.
-- Connection Details:
-  - Username: `admin`, secret found in *.secrets/postgres-admin-user-secret*
-  - Hostname: `postgres`
-  - Port: `5432`
+[pgAdmin](http://localhost:5050/) comes preconfigured with a server connection to the local PostgreSQL instance. For security reasons, the only thing you need to manually enter is the PostgreSQL admin user secret found in */.secrets/postgres-admin-user-secret.env*.
 
 ## Persistence
 
