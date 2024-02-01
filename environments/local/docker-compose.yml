@@ -44,7 +44,7 @@ services:
       # Mounting secret file
       - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/pgadmin-admin-user-secret:ro  # Secret file mount
     ports:
-      - "8080:80" # Access pgAdmin at http://localhost:8080/
+      - "5050:80" # Access pgAdmin at http://localhost:5050/
     restart: always
     depends_on:
       - postgres # Start after PostgreSQL
@@ -72,7 +72,7 @@ services:
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/keycloak-admin-user-secret:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/postgres-keycloak-db-user-secret:ro
     ports:
-      - "8081:8080" # Access Kecloak admin UI at http://localhost:8081/
+      - "8080:8080" # Access Kecloak admin UI at http://localhost:8080/
       - "8443:8443"
     restart: always
     depends_on:
