@@ -86,6 +86,7 @@ def purge_docker_environment(no_purge_volumes=False):
         # Change back to the original directory
         os.chdir(original_dir)
 
+# Removes '.secrets' folder in root directory, if it exists 
 def remove_secret_folder():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -97,6 +98,7 @@ def remove_secret_folder():
     except FileNotFoundError:
         print("/.secret folder does not exist or has already been removed.")
 
+# Purges Avalanche CMS secrets (skippable)
 def purge_secrets(no_purge_secrets=False):
 
     if no_purge_secrets:
@@ -110,7 +112,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Avalanche CMS local development cleanup script.")
     parser.add_argument('--no-purge-volumes', action='store_true', help='Do not purge Avalanche CMS Docker volumes', default=False)
-    parser.add_argument('--no-purge-secrets', action='store_true', help='Do not remove the local secrets in /.secret', default=False)
+    parser.add_argument('--no-purge-secrets', action='store_true', help='Do not remove the local secrets in /.secrets', default=False)
     args = parser.parse_args()
 
     purge_docker_environment(args.no_purge_volumes)
