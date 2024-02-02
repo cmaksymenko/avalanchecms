@@ -10,6 +10,9 @@ import os
 import re
 import shutil
 import subprocess
+import sys
+from functools import wraps
+
 
 # Redefine the print function to always flush by default
 def print(*args, **kwargs):
@@ -17,8 +20,30 @@ def print(*args, **kwargs):
     return builtins.print(*args, **kwargs)
 
 
+# Decorator that checks if the Docker engine is running, terminating the script if not
+def require_docker_running(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        
+        def is_docker_running():
+            try:
+                subprocess.run(["docker", "info"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return True
+            except subprocess.CalledProcessError:
+                return False
+
+        if not is_docker_running():
+            print("Docker engine is not running. Please start Docker engine and try again.")
+            sys.exit(1)
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 # Get all Docker volumes, returning them as a list
 # On failure, an empty list is returned
+@require_docker_running
 def get_docker_volumes():
 
     result = subprocess.run(["docker", "volume", "ls", "-q"], capture_output=True, text=True)
@@ -31,6 +56,7 @@ def get_docker_volumes():
     return volumes
 
 # Removes each Docker volume of a list of volume names
+@require_docker_running
 def remove_volumes(volumes):
     for volume in volumes:
         print(f"Removing volume {volume}...")
@@ -54,6 +80,7 @@ def purge_avalanchecms_volumes():
     remove_volumes(filtered_volumes)
 
 # Stops and removes Avalanche CMS Docker containers, and purges volumes, too (skippable)
+@require_docker_running
 def purge_docker_environment(no_purge_volumes=False):
 
     try:
