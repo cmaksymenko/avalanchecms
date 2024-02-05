@@ -16,12 +16,15 @@ services:
     container_name: postgres
     image: postgres:16-alpine  # Alpine-based image for efficiency and security
     environment:
+      AV_APP_NAME: PostgreSQL
+      AV_ORIGINAL_ENTRYPOINT: docker-entrypoint.sh
       POSTGRES_DB: admin
       POSTGRES_USER: postgres_admin # Admin user credentials
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres-admin-user-secret # Admin password from secret file
     volumes:
-      - postgres-data:/var/lib/postgresql/data
       - ./setup-postgres-db.sh:/docker-entrypoint-initdb.d/setup-postgres-db.sh
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts:/usr/local/bin/scripts
       # Mounting secret files
       - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/postgres-admin-user-secret:ro  
       - ./../../.secrets/postgres-avalanchecms-db-user-secret.env:/run/secrets/postgres-avalanchecms-db-user-secret:ro
@@ -31,18 +34,23 @@ services:
     restart: always
     networks:
       - avalanchecms
+    entrypoint: /usr/local/bin/scripts/custom-entrypoint.sh
+    command: ["postgres"]
 
   # pgAdmin Service for database management
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:8
     environment:
+      AV_APP_NAME: pgAdmin
+      AV_ORIGINAL_ENTRYPOINT: /entrypoint.sh
       PGADMIN_DEFAULT_EMAIL: admin@avalanchecms.com # Admin username
       PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin-admin-user-secret # Admin password from secret file
       PGADMIN_SERVER_JSON_FILE: /pgadmin4/avalanchecms-servers.json
     volumes:
       - ./pgadmin-servers.json:/pgadmin4/avalanchecms-servers.json:ro
       - pgadmin-data:/var/lib/pgadmin
+      - ./scripts:/usr/local/bin/scripts
       # Mounting secret file
       - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/pgadmin-admin-user-secret:ro  # Secret file mount
     ports:
@@ -52,6 +60,7 @@ services:
       - postgres # Start after PostgreSQL
     networks:
       - avalanchecms
+    entrypoint: /usr/local/bin/scripts/custom-entrypoint.sh
 
   # Keycloak for identity and access management (IAM)
   keycloak:
@@ -59,9 +68,14 @@ services:
     image: quay.io/keycloak/keycloak:23.0
     command: ["start-dev"] # Development mode, never use for production
     environment:
+      AV_APP_NAME: Keycloak
+      AV_ORIGINAL_ENTRYPOINT: /opt/keycloak/bin/kc.sh
+      AV_LOAD_SECRET_ENVS: true
+      AV_CUSTOM_SCRIPT: /usr/local/bin/scripts/set-keycloak-db-url.sh
       KEYCLOAK_ADMIN: admin # Admin username
       KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak-admin-user-secret # Admin password from secret file
       # Database connection
+      KC_DB: postgres
       KC_DB_URL_HOST: postgres
       KC_DB_URL_PORT: 5432
       KC_DB_URL_DATABASE: keycloak
@@ -69,7 +83,7 @@ services:
       KC_DB_PASSWORD_FILE: /run/secrets/postgres-keycloak-db-user-secret
       KC_DB_URL_SSL_ENABLED: false
     volumes:
-      - ./keycloak-env-loader.sh:/opt/keycloak/keycloak-env-loader.sh:ro
+      - ./scripts:/usr/local/bin/scripts
       # Mounting secret files
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/keycloak-admin-user-secret:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/postgres-keycloak-db-user-secret:ro
@@ -81,9 +95,8 @@ services:
       - postgres # Start after PostgreSQL
     networks:
       - avalanchecms
-    # Custom entry point to load dynamic env vars and secrets
-    entrypoint: /opt/keycloak/keycloak-env-loader.sh
-   
+    entrypoint: /usr/local/bin/scripts/custom-entrypoint.sh
+  
 # Persistent storage volumes
 volumes:
   postgres-data: # Stores PostgreSQL data
