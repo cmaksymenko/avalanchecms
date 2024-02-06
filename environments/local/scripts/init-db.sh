@@ -68,8 +68,8 @@ EOSQL
 main() {
 
     # Creates databases and users for 'avalanchecms' and 'keycloak'.
-    create_db_and_user "avalanchecms" "avalanchecms" "/run/secrets/postgres-avalanchecms-db-user-secret"
-    create_db_and_user "keycloak" "keycloak" "/run/secrets/postgres-keycloak-db-user-secret"
+    create_db_and_user "avalanchecms" "avalanchecms" "/run/secrets/avalanchecms/postgres-avalanchecms-db-user-secret.env"
+    create_db_and_user "keycloak" "keycloak" "/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env"
 }
 
 main "$@"
