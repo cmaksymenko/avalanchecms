@@ -85,11 +85,12 @@ services:
       AV_LOAD_SECRET_ENVS: true
       AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/set-keycloak-env.sh
     volumes:
+      - ./config/keycloak-realm-config.json:/opt/keycloak/data/import/keycloak-realm-config.json:ro
       - ./scripts:/usr/local/bin/avalanchecms:ro
       - ./config:/etc/avalanchecms:ro
       - ./../../.secrets:/run/secrets/avalanchecms:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
-    command: ["start-dev"] # Development mode, never use for production
+    command: ["start-dev", "--import-realm"] # Development mode, never use for production
   
 # Storage Volumes
 volumes:

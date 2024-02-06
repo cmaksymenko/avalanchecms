@@ -1,0 +1,9 @@
+{
+  "realm": "avalanchecms",
+  "enabled": true,
+  "displayName": "Avalanche CMS",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false
+}
