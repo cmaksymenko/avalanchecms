@@ -152,30 +152,20 @@ load_secret_envs() {
 # Execute custom script if AV_CUSTOM_SCRIPT is defined
 exec_custom_script() {
 
-    # Check if AV_CUSTOM_SCRIPT variable is set
     if [ -n "$AV_CUSTOM_SCRIPT" ]; then
 
-        echo "Executing custom script: $AV_CUSTOM_SCRIPT"
-
-        # Check if the custom script file exists and is executable
         if [ -f "$AV_CUSTOM_SCRIPT" ]; then
-            if [ -x "$AV_CUSTOM_SCRIPT" ]; then
 
-                # Execute the custom script
-                "$AV_CUSTOM_SCRIPT"
+            echo "Sourcing custom script: $AV_CUSTOM_SCRIPT"
+            . "$AV_CUSTOM_SCRIPT"
 
-            else
-                echo "Error: Script '$AV_CUSTOM_SCRIPT' is not executable." >&2
-                return 1
-            fi
         else
-            echo "Error: Script file '$AV_CUSTOM_SCRIPT' not found." >&2
+            echo "Error: Script '$AV_CUSTOM_SCRIPT' not found." >&2
             return 1
         fi
-
     else
         echo "No custom script specified."
-    fi   
+    fi 
 }
 
 # Main
