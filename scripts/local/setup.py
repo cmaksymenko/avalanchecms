@@ -87,7 +87,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Avalanche CMS local setup.")
     parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with defaults.')
-    parser.add_argument('-p', '--password', type=str, help='Set a common password for all secrets.')
+    parser.add_argument('-p', '--password', type=str, help="Set a uniform password (e.g., -p 'Your$ecret!'). Use single quotes for special characters.")
     args = parser.parse_args()
 
     if not args.password:
