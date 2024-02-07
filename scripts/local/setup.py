@@ -6,16 +6,17 @@
 # - Offer an automated mode for generating all secrets without user input, triggered by the '-a/--auto' argument
 # - The script assumes its location in 'scripts/local' and calculates the project root from there
 
+import argparse
 import os
 import random
 import string
+import sys
 from pathlib import Path
-import argparse
 
 # Special characters for secure passwords
 SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
 
-# Pool of characters for generating secrets: includes letters, digits, and low-risk special characters.
+# Pool of characters for generating secrets: includes letters, digits, and special characters
 SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
 
 # Default length for generated secrets
@@ -84,11 +85,20 @@ def create_secret_file(path, content):
 # Main
 def main():
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS setup script for local development.")
-    parser.add_argument('-a', '--auto', action='store_true', help='Enable automated mode with default settings.')
+    parser = argparse.ArgumentParser(description="Avalanche CMS local setup.")
+    parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with defaults.')
+    parser.add_argument('-p', '--password', type=str, help='Set a common password for all secrets.')
     args = parser.parse_args()
 
-    print(f"{'Automated' if args.auto else 'Interactive'} mode enabled.")
+    if not args.password:
+        print(f"{'Auto' if args.auto else 'Manual'} mode.")
+
+    if args.password is not None and args.password.strip():
+        print("Common password set.")
+    else:
+        if args.password is not None:
+            print("Error: Invalid password.")
+            sys.exit(1)
 
     project_root = find_project_root(__file__)
     secrets_path = os.path.join(project_root, '.secrets')
@@ -96,16 +106,21 @@ def main():
     if not os.path.exists(secrets_path):
         os.makedirs(secrets_path)
 
-    # Loop through each secret, prompt and create env file
+    # Process each secret and create corresponding env file
     for secret in secrets:
         secret_file = os.path.join(secrets_path, secret["file"])
-        secret_value = prompt_for_secret(secret["name"], args.auto)
+
+        # Choose password: use provided, prompt, or auto-generate
+        secret_value = (args.password.strip() if args.password and args.password.strip()
+                        else prompt_for_secret(secret["name"], args.auto))
+
         create_secret_file(secret_file, secret_value)
 
-    print("Local development environment setup for Avalanche CMS is complete.")
+    print("Avalanche CMS setup complete.")
 
-    if not args.auto:
-        print("Tip: You can use '--auto' next time for automatic mode.")
+    # Suggest auto mode if not used and no password provided
+    if not args.auto and not args.password:
+        print("Tip: Use '--auto' for automatic setup.")
 
 if __name__ == "__main__":
     main()
