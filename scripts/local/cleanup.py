@@ -104,9 +104,11 @@ def purge_docker_environment(no_purge_volumes=False):
 
     except subprocess.CalledProcessError as e:
         print(f"Failed to purge Docker environment: {e}")
+        sys.exit(1)
 
     except FileNotFoundError:
         print("Docker Compose file not found. Are you in the correct directory?")
+        sys.exit(1)
 
     finally:
 
@@ -135,17 +137,20 @@ def purge_secrets(no_purge_secrets=False):
         print("Secrets purged successfully.")
 
 # Main
-def main():
+def main(no_purge_volumes=False, no_purge_secrets=False):
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS local development cleanup script.")
-    parser.add_argument('--no-purge-volumes', action='store_true', help='Do not purge Avalanche CMS Docker volumes', default=False)
-    parser.add_argument('--no-purge-secrets', action='store_true', help='Do not remove the local secrets in /.secrets', default=False)
-    args = parser.parse_args()
-
-    purge_docker_environment(args.no_purge_volumes)
-    purge_secrets(args.no_purge_secrets)
+    purge_docker_environment(no_purge_volumes)
+    purge_secrets(no_purge_secrets)
 
     print("Local development environment cleanup is complete.")
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Avalanche CMS local development cleanup script.")
+    parser.add_argument('--no-purge-volumes', action='store_true', help='Do not purge Avalanche CMS Docker volumes')
+    parser.add_argument('--no-purge-secrets', action='store_true', help='Do not remove the local secrets in /.secrets')
+    args = parser.parse_args()
+    return args
+
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(no_purge_volumes=args.no_purge_volumes, no_purge_secrets=args.no_purge_secrets)

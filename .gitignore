@@ -1,5 +1,11 @@
-# Java and BlueJ Specific Files
-# Ignoring BlueJ specific files and Java package files
+# Local Dev & Editor Files (sensitive info)
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Java & BlueJ Files
 *.ctxt
 *.jar
 *.war
@@ -9,16 +15,27 @@
 *.tar.gz
 *.rar
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Build Artifacts
+/build/
+/dist/
+/out/
+*.class
+*.o
+*.pyc
+__pycache__
 
-# Virtual Machine Crash Logs
-# These logs are generated when the Java VM crashes
-hs_err_pid*
-replay_pid*
+# Backup & Temp Files
+*~
+*.bak
+*.tmp
+*.swp
 
-# Sensitive Keywords in File and Folder Names
-# Ignoring files and folders containing keywords that often indicate sensitive information
+# Security-Sensitive Formats
+*.pem
+*.p12
+*.keychain
+
+# Sensitive Keywords
 **/*secrets*/
 *secret*
 *pwd*
@@ -32,37 +49,12 @@ replay_pid*
 *private_key*
 *cert*
 
-# Backup and Temporary Files
-# These files can inadvertently contain sensitive data or clutter the repository
-*~
-*.bak
-*.tmp
-*.swp
+# VM Crash Logs
+hs_err_pid*
+replay_pid*
 
-# Specific File Formats for Security
-# Ignoring private key files, certificates, and other sensitive formats
-*.pem
-*.p12
-*.keychain
-
-# Local Development and Editor Files
-# Local configuration files and editor-specific settings can contain sensitive information
-.DS_Store        # macOS folder metadata
-Thumbs.db        # Windows thumbnail cache
-.idea/           # JetBrains IDEs settings
-.vscode/         # Visual Studio Code settings
-*.log            # Log files might contain sensitive data
-
-# Build Artifacts
-# Exclude common build artifacts and compiled files
-/build/
-/dist/
-/out/
-*.class
-*.o
-*.pyc
+# J2ME Tools
+.mtj.tmp/
 
 # Docker Volumes
-# Docker volumes can contain sensitive data, especially if used for databases or storing secrets
 /docker/volumes/
-/.vscode

@@ -12,6 +12,7 @@ import random
 import string
 import sys
 from pathlib import Path
+from cleanup import main as cleanup_main
 
 # Special characters for secure passwords
 SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
@@ -59,11 +60,11 @@ def generate_random_password(length=SECRET_DEFAULT_LEN):
 #
 def prompt_for_secret(description, auto=False):
     if not auto:
-        user_input = input(f"Enter secret for {description} (press enter for random): ").strip()
-        if user_input: # This will be False for empty or all-whitespace strings, or if the user pressed return
+        user_input = input(f"Secret for {description} [Enter=random]: ").strip()
+        if user_input: # Will be False for empty, whitespace-only strings, or return key
             return user_input
 
-    print(f"Generating a random secret for {description}...")
+    print(f"Generating secret for {description}.")
     return generate_random_password()
 
 # Creates a secret file if it doesn't already exist
@@ -78,9 +79,9 @@ def create_secret_file(path, content):
     if not os.path.exists(path):
         with open(path, 'w') as file:
             file.write(content)
-        print(f"Created secret file: {path}")
+        print(f"Secret file created: {path}")
     else:
-        print(f"Secret file already exists: {path}, skipping...")
+        print(f"Existing secret file: {path}, skipped")
 
 # Main
 def main():
@@ -88,6 +89,7 @@ def main():
     parser = argparse.ArgumentParser(description="Avalanche CMS local setup.")
     parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with defaults.')
     parser.add_argument('-p', '--password', type=str, help="Set a uniform password (e.g., -p 'Your$ecret!'). Use single quotes for special characters.")
+    parser.add_argument('-c', '--clean', action='store_true', help="Clean environment before setup.")
     args = parser.parse_args()
 
     if not args.password:
@@ -98,6 +100,14 @@ def main():
     else:
         if args.password is not None:
             print("Error: Invalid password.")
+            sys.exit(1)
+
+    if args.clean:
+        print("Cleaning environment.")
+        try:
+            cleanup_main()
+        except Exception as e:
+            print("Error during cleanup:", e)
             sys.exit(1)
 
     project_root = find_project_root(__file__)
