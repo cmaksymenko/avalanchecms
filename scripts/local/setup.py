@@ -156,9 +156,12 @@ def create_secret_file(path, secret):
 # Note: If the file already exists, creation is skipped
 #
 def create_hash_file(path, secret):
+
     if not os.path.exists(path):
 
         hashed_data = hash_secret(secret)
+        
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         
         with open(path, 'w') as file:
             for key, value in hashed_data.items():
@@ -207,7 +210,7 @@ def main():
 
         # Construct file paths for secret (and hash) files
         secret_file = os.path.join(secrets_path, secret.base_filename + ".env")
-        secret_file_hash = os.path.join(secrets_path, secret.base_filename + ".hash") if secret.generate_hash else None
+        secret_file_hash = os.path.join(secrets_path, "hashes", secret.base_filename + ".hash") if secret.generate_hash else None
 
         # Choose password: use provided, prompt, or auto-generate
         secret_value = (args.password.strip() if args.password and args.password.strip()
