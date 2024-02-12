@@ -30,8 +30,9 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/avalanchecms-init-db.sh:ro
       - ./scripts:/usr/local/bin/avalanchecms:ro
-      - ./config:/etc/avalanchecms:ro
-      - ./../../.secrets:/run/secrets/avalanchecms:ro
+      - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/avalanchecms/postgres-admin-user-secret.env:ro
+      - ./../../.secrets/postgres-avalanchecms-db-user-secret.env:/run/secrets/avalanchecms/postgres-avalanchecms-db-user-secret.env:ro
+      - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
     command: ["postgres"]
 
@@ -55,8 +56,8 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
       - ./scripts:/usr/local/bin/avalanchecms:ro
-      - ./config:/etc/avalanchecms:ro
-      - ./../../.secrets:/run/secrets/avalanchecms:ro
+      - ./config/pgadmin-config.json:/etc/avalanchecms/pgadmin-config.json:ro
+      - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/avalanchecms/pgadmin-admin-user-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
 
   # Keycloak IAM
@@ -86,8 +87,9 @@ services:
     volumes:
       - ./config/keycloak-realm-config.json:/opt/keycloak/data/import/keycloak-realm-config.json:ro
       - ./scripts:/usr/local/bin/avalanchecms:ro
-      - ./config:/etc/avalanchecms:ro
-      - ./../../.secrets:/run/secrets/avalanchecms:ro
+      - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/avalanchecms/keycloak-admin-user-secret.env:ro
+      - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
+      - ./../../.secrets/hashes:/run/secrets/avalanchecms/hashes:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
     command: ["start-dev", "--import-realm"] # Development mode, never use for production
   
