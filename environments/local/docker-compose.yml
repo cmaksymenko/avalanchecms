@@ -5,8 +5,8 @@ name: avalanchecms
 
 # Network setup
 networks:
-  avalanchecms:
-    driver: bridge  # Bridge driver for container communication
+  local:
+    driver: bridge
 
 # Services
 services:
@@ -19,7 +19,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - avalanchecms
+      - local
     environment:
       POSTGRES_DB: admin
       POSTGRES_USER: postgres_admin
@@ -28,8 +28,8 @@ services:
       AV_ORIGINAL_ENTRYPOINT: docker-entrypoint.sh
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/avalanchecms-init-db.sh:ro
-      - ./scripts:/usr/local/bin/avalanchecms:ro
+      - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
       - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/avalanchecms/postgres-admin-user-secret.env:ro
       - ./../../.secrets/postgres-avalanchecms-db-user-secret.env:/run/secrets/avalanchecms/postgres-avalanchecms-db-user-secret.env:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
@@ -44,9 +44,9 @@ services:
     depends_on:
       - postgres
     ports:
-      - "5050:80" # UI: http://localhost:5050/
+      - "5050:80" # UI: http://host.docker.internal:5050/
     networks:
-      - avalanchecms
+      - local
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@avalanchecms.com # admin user
       PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-admin-user-secret.env
@@ -55,7 +55,7 @@ services:
       AV_ORIGINAL_ENTRYPOINT: /entrypoint.sh
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      - ./scripts:/usr/local/bin/avalanchecms:ro
+      - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
       - ./config/pgadmin-config.json:/etc/avalanchecms/pgadmin-config.json:ro
       - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/avalanchecms/pgadmin-admin-user-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
@@ -68,9 +68,9 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8080:8080" # UI: http://localhost:8080/
+      - "8080:8080" # UI: http://host.docker.internal:8080/
     networks:
-      - avalanchecms
+      - local
     environment:
       KEYCLOAK_ADMIN: admin # admin user
       KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/avalanchecms/keycloak-admin-user-secret.env
@@ -86,7 +86,8 @@ services:
       AV_ORIGINAL_ENTRYPOINT: /opt/keycloak/bin/kc.sh
     volumes:
       - ./config/keycloak-realm-config.json:/opt/keycloak/data/import/keycloak-realm-config.json:ro
-      - ./scripts:/usr/local/bin/avalanchecms:ro
+      - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
+      - ./scripts/set-keycloak-env.sh:/usr/local/bin/avalanchecms/set-keycloak-env.sh:ro
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/avalanchecms/keycloak-admin-user-secret.env:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
       - ./../../.secrets/hashes:/run/secrets/avalanchecms/hashes:ro
