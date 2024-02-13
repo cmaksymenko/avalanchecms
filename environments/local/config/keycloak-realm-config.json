@@ -5,5 +5,95 @@
   "sslRequired": "external",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
-  "duplicateEmailsAllowed": false
+  "duplicateEmailsAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin"
+      },
+      {
+        "name": "user"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "Admins",
+      "realmRoles": [
+        "admin"
+      ]
+    },
+    {
+      "name": "Users",
+      "realmRoles": [
+        "user"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "adminuser",
+      "email": "adminuser@avalanchecms.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Admins"
+      ],
+      "createdTimestamp": 1707589183016
+    },
+    {
+      "username": "appuser1",
+      "email": "appuser1@avalanchecms.com",
+      "firstName": "App",
+      "lastName": "User 1",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Users"
+      ],
+      "createdTimestamp": 1707589183016
+    },
+    {
+      "username": "appuser2",
+      "email": "appuser2@avalanchecms.com",
+      "firstName": "App",
+      "lastName": "User 2",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Users"
+      ],
+      "createdTimestamp": 1707589183016
+    },
+    {
+      "username": "combineduser",
+      "email": "combineduser@avalanchecms.com",
+      "firstName": "Combined",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Admins",
+        "/Users"
+      ],
+      "createdTimestamp": 1707589183016
+    },
+    {
+      "username": "nogroupuser",
+      "email": "nogroupuser@avalanchecms.com",
+      "firstName": "No Group",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [],
+      "createdTimestamp": 1707589183016
+    }
+  ]
 }
