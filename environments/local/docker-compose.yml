@@ -82,12 +82,12 @@ services:
       KC_DB_URL_DATABASE: keycloak
       AV_APP_NAME: Keycloak
       AV_LOAD_SECRET_ENVS: true
-      AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/set-keycloak-env.sh
+      AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/keycloak-config.sh
       AV_ORIGINAL_ENTRYPOINT: /opt/keycloak/bin/kc.sh
     volumes:
       - ./config/keycloak-realm-config.json:/opt/keycloak/data/import/keycloak-realm-config.json:ro
       - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
-      - ./scripts/set-keycloak-env.sh:/usr/local/bin/avalanchecms/set-keycloak-env.sh:ro
+      - ./scripts/keycloak-config.sh:/usr/local/bin/avalanchecms/keycloak-config.sh:ro
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/avalanchecms/keycloak-admin-user-secret.env:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
       - ./../../.secrets/hashes:/run/secrets/avalanchecms/hashes:ro
