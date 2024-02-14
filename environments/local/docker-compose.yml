@@ -62,8 +62,12 @@ services:
 
   # Keycloak IAM
   keycloak:
+    image: avalanchecms/local/keycloak
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:23.0
+    build:
+      context: ./docker/keycloak
+      args:
+        KEYCLOAK_VERSION: "23.0"
     restart: always
     depends_on:
       - postgres
@@ -85,7 +89,7 @@ services:
       AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/keycloak-config.sh
       AV_ORIGINAL_ENTRYPOINT: /opt/keycloak/bin/kc.sh
     volumes:
-      - ./config/keycloak-realm-config.json:/opt/keycloak/data/import/keycloak-realm-config.json:ro
+      - ./config/keycloak-realm-config.json:/tmp/avalanchecms/keycloak-realm-config.orig.json:ro
       - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
       - ./scripts/keycloak-config.sh:/usr/local/bin/avalanchecms/keycloak-config.sh:ro
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/avalanchecms/keycloak-admin-user-secret.env:ro
