@@ -179,7 +179,10 @@ def main():
     parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with defaults.')
     parser.add_argument('-p', '--password', type=str, help="Set a uniform password (e.g., -p 'Your$ecret!'). Use single quotes for special characters.")
     parser.add_argument('-c', '--clean', action='store_true', help="Clean environment before setup.")
-    args = parser.parse_args()
+    args, remaining_argv = parser.parse_known_args()
+
+    # defaults for optional args from -c option
+    purge_args = argparse.Namespace(keep_volumes=False, keep_secrets=False)
 
     if not args.password:
         print(f"{'Auto' if args.auto else 'Manual'} mode.")
@@ -192,34 +195,46 @@ def main():
             sys.exit(1)
 
     if args.clean:
+        
         print("Cleaning environment.")
+
+        purge_parser = argparse.ArgumentParser()
+        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
+        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
+        purge_args = purge_parser.parse_args(remaining_argv)
+
         try:
-            cleanup_main()
+            cleanup_main(keep_volumes=purge_args.keep_volumes, keep_secrets=purge_args.keep_secrets)
         except Exception as e:
             print("Error during cleanup:", e)
             sys.exit(1)
 
-    project_root = find_project_root(__file__)
-    secrets_path = os.path.join(project_root, '.secrets')
+    if not purge_args.keep_secrets:
 
-    if not os.path.exists(secrets_path):
-        os.makedirs(secrets_path)
+        project_root = find_project_root(__file__)
+        secrets_path = os.path.join(project_root, '.secrets')
 
-    # Process each secret and create corresponding env file
-    for secret in secrets:
+        if not os.path.exists(secrets_path):
+            os.makedirs(secrets_path)
 
-        # Construct file paths for secret (and hash) files
-        secret_file = os.path.join(secrets_path, secret.base_filename + ".env")
-        secret_file_hash = os.path.join(secrets_path, "hashes", secret.base_filename + ".hash") if secret.generate_hash else None
+        # Process each secret and create corresponding env file
+        for secret in secrets:
 
-        # Choose password: use provided, prompt, or auto-generate
-        secret_value = (args.password.strip() if args.password and args.password.strip()
-                        else prompt_for_secret(secret.name, args.auto))
+            # Construct file paths for secret (and hash) files
+            secret_file = os.path.join(secrets_path, secret.base_filename + ".env")
+            secret_file_hash = os.path.join(secrets_path, "hashes", secret.base_filename + ".hash") if secret.generate_hash else None
 
-        # Create secret (and hash) files on disk
-        create_secret_file(secret_file, secret_value)
-        if secret_file_hash is not None:
-            create_hash_file(secret_file_hash, secret_value)
+            # Choose password: use provided, prompt, or auto-generate
+            secret_value = (args.password.strip() if args.password and args.password.strip()
+                            else prompt_for_secret(secret.name, args.auto))
+
+            # Create secret (and hash) files on disk
+            create_secret_file(secret_file, secret_value)
+            if secret_file_hash is not None:
+                create_hash_file(secret_file_hash, secret_value)
+
+    else:
+        print("Skipping secret creation, because cleanup was performed with keeping secrets.")
 
     print("Avalanche CMS setup complete.")
 

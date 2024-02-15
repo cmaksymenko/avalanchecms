@@ -81,7 +81,7 @@ def purge_avalanchecms_volumes():
 
 # Stops and removes Avalanche CMS Docker containers, and purges volumes, too (skippable)
 @require_docker_running
-def purge_docker_environment(no_purge_volumes=False):
+def purge_docker_environment(keep_volumes=False):
 
     try:
 
@@ -95,7 +95,7 @@ def purge_docker_environment(no_purge_volumes=False):
         # Stop and remove all containers and networks
         subprocess.run(["docker", "compose", "down"], check=True)
 
-        if no_purge_volumes:
+        if keep_volumes:
             print("Volume purge skipped.")
         else:
             purge_avalanchecms_volumes()
@@ -128,29 +128,29 @@ def remove_secret_folder():
         print("/.secret folder does not exist or has already been removed.")
 
 # Purges Avalanche CMS secrets (skippable)
-def purge_secrets(no_purge_secrets=False):
+def purge_secrets(keep_secrets=False):
 
-    if no_purge_secrets:
+    if keep_secrets:
         print("Secret purge skipped.")
     else:
         remove_secret_folder()
         print("Secrets purged successfully.")
 
 # Main
-def main(no_purge_volumes=False, no_purge_secrets=False):
+def main(keep_volumes=False, keep_secrets=False):
 
-    purge_docker_environment(no_purge_volumes)
-    purge_secrets(no_purge_secrets)
+    purge_docker_environment(keep_volumes)
+    purge_secrets(keep_secrets)
 
     print("Local development environment cleanup is complete.")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Avalanche CMS local development cleanup script.")
-    parser.add_argument('--no-purge-volumes', action='store_true', help='Do not purge Avalanche CMS Docker volumes')
-    parser.add_argument('--no-purge-secrets', action='store_true', help='Do not remove the local secrets in /.secrets')
+    parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
+    parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
     args = parser.parse_args()
     return args
 
 if __name__ == "__main__":
     args = parse_args()
-    main(no_purge_volumes=args.no_purge_volumes, no_purge_secrets=args.no_purge_secrets)
+    main(keep_volumes=args.keep_volumes, keep_secrets=args.keep_secrets)
