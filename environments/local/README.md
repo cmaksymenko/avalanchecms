@@ -46,7 +46,7 @@ docker compose up
 - **pgAdmin**:
   - URL: [http://localhost:5050](http://localhost:5050/)
   - Username: `admin@avalanchecm.com`
-  - Password: Found in *.secrets/pgadmin-admin-user-secret.env*
+  - Password: Found in *.secrets/pgadmin-user-secret.env*
 - **Keycloak Admin UI**:
   - URL: [http://localhost:8080](http://localhost:8080/)
   - Username: `admin`

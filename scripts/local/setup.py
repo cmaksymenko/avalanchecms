@@ -44,7 +44,7 @@ SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
 secret_data = [
     # Infrastructure components admin users
     ("Postgres Admin User", "postgres-admin-user-secret"),
-    ("PgAdmin Admin User", "pgadmin-admin-user-secret"),
+    ("PgAdmin Admin User", "pgadmin-user-secret"),
     ("Keycloak Admin User", "keycloak-admin-user-secret"),
 
     # Database connection users
@@ -52,11 +52,11 @@ secret_data = [
     ("Postgres Keycloak Database User", "postgres-keycloak-db-user-secret"),
 
     # Avalanche CMS Keycloak users (with generate_hash=True)
-    ("Avalanche CMS Admin User", "avalanche-cms-adminuser-secret", True),
-    ("Avalanche CMS App User 1", "avalanche-cms-appuser1-secret", True),
-    ("Avalanche CMS App User 2", "avalanche-cms-appuser2-secret", True),
-    ("Avalanche CMS Combined User", "avalanche-cms-combineduser-secret", True),
-    ("Avalanche CMS No Group User", "avalanche-cms-nogroupuser-secret", True)
+    ("Avalanche CMS Admin User", "avalanchecms-adminuser-secret", True),
+    ("Avalanche CMS App User 1", "avalanchecms-appuser1-secret", True),
+    ("Avalanche CMS App User 2", "avalanchecms-appuser2-secret", True),
+    ("Avalanche CMS Combined User", "avalanchecms-combineduser-secret", True),
+    ("Avalanche CMS No Group User", "avalanchecms-nogroupuser-secret", True)
 ]
 
 secrets = [SecretDefinition(*data) for data in secret_data]

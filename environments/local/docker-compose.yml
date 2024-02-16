@@ -22,7 +22,7 @@ services:
       - local
     environment:
       POSTGRES_DB: admin
-      POSTGRES_USER: postgres_admin
+      POSTGRES_USER: postgresadminuser
       POSTGRES_PASSWORD_FILE: /run/secrets/avalanchecms/postgres-admin-user-secret.env
       AV_APP_NAME: PostgreSQL
       AV_ORIGINAL_ENTRYPOINT: docker-entrypoint.sh
@@ -48,8 +48,8 @@ services:
     networks:
       - local
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@avalanchecms.com # admin user
-      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-admin-user-secret.env
+      PGADMIN_DEFAULT_EMAIL: pgadminuser@avalanchecms.com # admin user
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-user-secret.env
       PGADMIN_SERVER_JSON_FILE: /etc/avalanchecms/pgadmin-config.json
       AV_APP_NAME: pgAdmin
       AV_ORIGINAL_ENTRYPOINT: /entrypoint.sh
@@ -57,7 +57,7 @@ services:
       - pgadmin-data:/var/lib/pgadmin
       - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
       - ./config/pgadmin-config.json:/etc/avalanchecms/pgadmin-config.json:ro
-      - ./../../.secrets/pgadmin-admin-user-secret.env:/run/secrets/avalanchecms/pgadmin-admin-user-secret.env:ro
+      - ./../../.secrets/pgadmin-user-secret.env:/run/secrets/avalanchecms/pgadmin-user-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
 
   # Keycloak IAM
@@ -76,14 +76,14 @@ services:
     networks:
       - local
     environment:
-      KEYCLOAK_ADMIN: admin # admin user
+      KEYCLOAK_ADMIN: keycloakadminuser # admin user
       KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/avalanchecms/keycloak-admin-user-secret.env
       KC_DB: postgres
-      KC_DB_USERNAME: keycloak
+      KC_DB_USERNAME: postgreskeycloakdbuser
       KC_DB_PASSWORD_FILE: /run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env
       KC_DB_URL_HOST: postgres
       KC_DB_URL_PORT: 5432
-      KC_DB_URL_DATABASE: keycloak
+      KC_DB_URL_DATABASE: keycloakdb
       AV_APP_NAME: Keycloak
       AV_LOAD_SECRET_ENVS: true
       AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/keycloak-config.sh

@@ -1,10 +1,10 @@
 {
   "Servers": {
     "1": {
-      "Name": "Local PostgreSQL Server (Dev)",
+      "Name": "Local PostgreSQL DB (Dev)",
       "Group": "Avalanche CMS",
       "Port": 5432,
-      "Username": "postgres_admin",
+      "Username": "postgresadminuser",
       "Host": "postgres",
       "SSLMode": "prefer",
       "MaintenanceDB": "admin"
