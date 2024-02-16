@@ -140,20 +140,15 @@ def hash_secret(secret, salt_length=16, iterations=27500, salt_base=None):
         
         if salt_base:
             salt = generate_deterministic_salt(salt_base, salt_length)
-            print(f"Derived salt for base string: '{salt_base}' and length: {salt_length}: '{salt}'")
         else:
             salt = os.urandom(salt_length) # generate salt
-            print(f"Generated random salt of length {salt_length}: '{salt}'")
 
         # Hash using PBKDF2
         hashed_secret = hashlib.pbkdf2_hmac('sha256', secret.encode(), salt, iterations)
-        print(f"Hashed secret using PBKDF2 HMAC with SHA-256: secret: '{secret}' salt: '{salt}' iterations: {iterations} hash: {hashed_secret.hex()}")
-
 
         # Encode
         encoded_hash = base64.b64encode(hashed_secret).decode()
         encoded_salt = base64.b64encode(salt).decode()
-        print(f"Result encoded hash: '{encoded_hash}' and encoded salt: '{encoded_salt}'")
 
         return {
             "algorithm": "pbkdf2-sha256",
