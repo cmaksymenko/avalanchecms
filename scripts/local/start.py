@@ -10,6 +10,8 @@ import sys
 import time
 from functools import wraps
 
+from setup import main as setup_main
+
 # Redefine the print function to always flush by default
 def print(*args, **kwargs):
     kwargs.setdefault('flush', True)
@@ -77,8 +79,19 @@ def start_docker_compose():
 def main():
 
     parser = argparse.ArgumentParser(description="Avalanche CMS local development start script.")
+    parser.add_argument('-c', '--clean', action='store_true', help="Cleans and reinitializes the environment, deleting old data, volumes, containers and secrets.")    
     args = parser.parse_args()
-
+    
+    if args.clean:
+        
+        print("Cleaning and reinitializing environment.")
+        try:
+            setup_main(auto=True, clean=True)
+        except Exception as e:
+            print("Error during cleanup and reinitialization:", e)
+            sys.exit(1)
+            
+    print("Starting.")   
     try:
         start_docker_compose()
     except KeyboardInterrupt:

@@ -252,50 +252,33 @@ def create_hash_file(path, secret, salt_base=None):
         print(f"Existing hash file: {path}, skipped")
 
 
-def main():
+# Main
+def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None):
     
     """
     Main Avalanche CMS setup function.
-    """
-   
-    parser = argparse.ArgumentParser(description="Avalanche CMS Setup: Interactive local development setup. Automatable with -a for strong random passwords. Manages secrets in '/.secrets' and Keycloak hashes in './secrets/hashes'. Use -c for full cleanup, resetting all data. Assumes 'scripts/local' location for repo root.")
+    """    
 
-    parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with random strong passwords.')
-    parser.add_argument('-p', '--password', type=str, help="Sets a specific password. Enclose symbols in single quotes.")
-    parser.add_argument('-c', '--clean', action='store_true', help="Cleans the environment for a full reset. Additional options: -kv, --keep-volumes: Retains Docker volumes; -ks, --keep-secrets: Retains secrets and hashes in '.secrets'")
-    parser.add_argument('-s', '--salt-base', type=str, help="Sets salt base for hashing (debug only), defaults to random.")
+    if not password:
+        print(f"{'Auto' if auto else 'Manual'} mode.")
 
-    args, remaining_argv = parser.parse_known_args()
-
-    # defaults for optional args from -c option
-    purge_args = argparse.Namespace(keep_volumes=False, keep_secrets=False)
-
-    if not args.password:
-        print(f"{'Auto' if args.auto else 'Manual'} mode.")
-
-    if args.password is not None and args.password.strip():
+    if password is not None and password.strip():
         print("Common password set.")
     else:
-        if args.password is not None:
+        if password is not None:
             print("Error: Invalid password.")
             sys.exit(1)
 
-    if args.clean:
+    if clean:
         
         print("Cleaning environment.")
-
-        purge_parser = argparse.ArgumentParser()
-        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true')
-        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true')
-        purge_args = purge_parser.parse_args(remaining_argv)
-
         try:
-            cleanup_main(keep_volumes=purge_args.keep_volumes, keep_secrets=purge_args.keep_secrets)
+            cleanup_main(keep_volumes, keep_secrets)
         except Exception as e:
             print("Error during cleanup:", e)
             sys.exit(1)
 
-    if not purge_args.keep_secrets:
+    if not keep_secrets:
 
         project_root = find_project_root(__file__)
         secrets_path = os.path.join(project_root, '.secrets')
@@ -311,13 +294,13 @@ def main():
             secret_file_hash = os.path.join(secrets_path, "hashes", secret.base_filename + ".hash") if secret.generate_hash else None
 
             # Choose password: use provided, prompt, or auto-generate
-            secret_value = (args.password.strip() if args.password and args.password.strip()
-                            else prompt_for_secret(secret.name, args.auto))
+            secret_value = (password.strip() if password and password.strip()
+                            else prompt_for_secret(secret.name, auto))
 
             # Create secret (and hash) files on disk
             create_secret_file(secret_file, secret_value)
             if secret_file_hash is not None:
-                create_hash_file(path=secret_file_hash, secret=secret_value, salt_base=args.salt_base)
+                create_hash_file(path=secret_file_hash, secret=secret_value, salt_base=salt_base)
 
     else:
         print("Skipping secret creation, because cleanup was performed with keeping secrets.")
@@ -325,8 +308,39 @@ def main():
     print("Avalanche CMS setup complete.")
 
     # Suggest auto mode if not used and no password provided
-    if not args.auto and not args.password:
+    if not auto and not password:
         print("Tip: Use '--auto' for automatic setup.")
 
+
+def parse_args():
+
+    parser = argparse.ArgumentParser(description="Avalanche CMS Setup: Interactive local development setup. Automatable with -a for strong random passwords. Manages secrets in '/.secrets' and Keycloak hashes in './secrets/hashes'. Use -c for full cleanup, resetting all data. Assumes 'scripts/local' location for repo root.")
+
+    parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with random strong passwords.')
+    parser.add_argument('-p', '--password', type=str, help="Sets a specific password. Enclose symbols in single quotes.")
+    parser.add_argument('-c', '--clean', action='store_true', help="Cleans the environment for a full reset. Additional options: -kv, --keep-volumes: Retains Docker volumes; -ks, --keep-secrets: Retains secrets and hashes in '.secrets'")
+    parser.add_argument('-s', '--salt-base', type=str, help="Sets salt base for hashing (debug only), defaults to random.")
+
+    args, remaining_argv = parser.parse_known_args()
+    
+    purge_args = None
+    if args.clean:
+        
+        purge_parser = argparse.ArgumentParser()
+        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true')
+        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true')
+        purge_args = purge_parser.parse_args(remaining_argv)
+        
+    return args, remaining_argv, purge_args
+
+
 if __name__ == "__main__":
-    main()
+    
+    args, remaining_argv, purge_args = parse_args()
+    
+    keep_volumes = purge_args.keep_volumes if args.clean else None
+    keep_secrets = purge_args.keep_secrets if args.clean else None
+    
+    main(auto=args.auto, password=args.password, clean=args.clean, 
+         keep_volumes=keep_volumes, keep_secrets=keep_secrets, 
+         salt_base=args.salt_base)
