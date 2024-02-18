@@ -3,13 +3,17 @@
 
 #!/bin/sh
 
-# Escapes dollar signs in the Keycloak database password
+# Escapes dollar signs in Keycloak DB password to prevent evaluation bugs.
+#
+# Relevant issue and PR:
+# https://github.com/keycloak/keycloak/issues/19831
+# https://github.com/keycloak/keycloak/pull/22585
+#
+# Globals:
+#   KC_DB_PASSWORD - Keycloak DB password (modified if it contains $).
+#   AV_NO_DLR_SUB - If set, skips $ sign substitution.
+#
 escape_keycloak_db_pwd() {
-
-    # This prevents a parameter evaluation bug in Keycloak.
-    # Relevant issue and pull request:
-    # https://github.com/keycloak/keycloak/issues/19831
-    # https://github.com/keycloak/keycloak/pull/22585
 
     echo "Escaping dollar signs in DB password if necessary."
 
@@ -36,7 +40,8 @@ escape_keycloak_db_pwd() {
     fi
 }
 
-# Sets Keycloak environment variables
+# Sets Keycloak environment variables.
+# Initializes and updates necessary variables for Keycloak.
 update_keycloak_env() {
 
     echo "Setting Keycloak environment variables."
@@ -46,7 +51,8 @@ update_keycloak_env() {
     echo "Environment processing completed."
 }
 
-# Cleans up temporary files
+# Cleans up temporary files from /tmp.
+# Returns: 0 on success/no files, 1 on error
 cleanup_tmp_files() {
 
     file_count=$(find /tmp -type f -name 'avalanchecms.*' | wc -l)
@@ -66,7 +72,17 @@ cleanup_tmp_files() {
     fi
 }
 
-# Asserts the presence of secret hash files
+# Asserts existence of secret hash files in the specified directory.
+# Checks if dir exists and contains .hash files, returning error codes.
+#
+# Parameters:
+#   dir_path - Directory to check for hash files.
+#
+# Returns:
+#   0 if .hash files found
+#   1 if dir_path missing
+#   2 if dir doesn't exist or no .hash files
+#
 assert_secret_hash_files() {
 
     local dir_path=$1
@@ -93,7 +109,17 @@ assert_secret_hash_files() {
     fi
 }
 
-# Updates the timestamp of users in Keycloak configuration
+# Updates users' createdTimestamp to current epoch in Keycloak config.
+# Calculates epoch if not provided. Creates tmp file if not provided.
+#
+# Parameters:
+#   input_file - File containing Keycloak config.
+#   current_epoch_ms (optional) - Current epoch in ms.
+#   tmp_output_file (optional) - Temporary output file.
+#
+# Returns:
+#   0 on success, 1 on error. Outputs tmp file path on success.
+#
 update_users_timestamp() {
 
     local input_file=$1
@@ -142,7 +168,19 @@ update_users_timestamp() {
     fi
 }
 
-# Updates user credentials from a hash file in the Keycloak configuration
+# Updates Keycloak user credentials from hash file.
+# Checks if necessary files exist. Calculates epoch if not provided.
+# Creates tmp output config if needed.
+#
+# Parameters:
+#   keycloak_config_filepath - Path to Keycloak config file.
+#   hash_filepath - Path to hash file.
+#   keycloak_tmp_config (optional) - Temporary output config file.
+#   current_epoch_ms (optional) - Current epoch in milliseconds.
+#
+# Returns:
+#   0 on success, 1 on error.
+#
 update_user_credential_from_hash_file() {
 
     local keycloak_config_filepath=$1
@@ -242,7 +280,8 @@ update_user_credential_from_hash_file() {
     fi
 }
 
-# Updates the Keycloak configuration with user timestamps and credentials
+# Updates Keycloak config with user timestamps and credentials. Moves final
+# config to /opt/keycloak/data/import/ for automatic import by Keycloak.
 update_keycloak_config() {
 
     echo "Updating Keycloak config."
@@ -293,7 +332,7 @@ update_keycloak_config() {
     echo "Keycloak config processing completed."
 }
 
-# The main function orchestrating the setup process.
+# Main
 main() {
     echo "Starting Keycloak setup process..."
 
