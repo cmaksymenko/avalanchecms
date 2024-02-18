@@ -90,5 +90,23 @@
       "totp": false,
       "groups": []
     }
+  ],
+  "clients": [
+    {
+      "clientId": "pgadmin",
+      "name": "pgAdmin",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://host.docker.internal:5050/oauth2/authorize"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    }
   ]
 }
