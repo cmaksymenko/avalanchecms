@@ -1,31 +1,15 @@
+# This script automates Keycloak setup, including escaping database passwords,
+# and updating user credentials.
+
 #!/bin/sh
 
-cleanup_tmp_files() {
-
-    file_count=$(find /tmp -type f -name 'avalanchecms.*' | wc -l)
-    if [ $file_count -eq 0 ]; then
-        echo "No Avalanche CMS tmp files found in /tmp."
-        return 0
-    fi
-
-    find /tmp -type f -name 'avalanchecms.*' -exec rm {} +
-
-    if [ $? -eq 0 ]; then
-        echo "Successfully removed $file_count Avalanche CMS tmp files from /tmp."
-        return 0
-    else
-        echo "Failed to remove Avalanche CMS files from /tmp." >&2
-        return 1
-    fi
-}
-
-
-# Escapes dollar signs in the Keycloak database password.
-# This prevents a parameter evaluation bug in Keycloak.
-# Relevant issue and pull request:
-# https://github.com/keycloak/keycloak/issues/19831
-# https://github.com/keycloak/keycloak/pull/22585
+# Escapes dollar signs in the Keycloak database password
 escape_keycloak_db_pwd() {
+
+    # This prevents a parameter evaluation bug in Keycloak.
+    # Relevant issue and pull request:
+    # https://github.com/keycloak/keycloak/issues/19831
+    # https://github.com/keycloak/keycloak/pull/22585
 
     echo "Escaping dollar signs in DB password if necessary."
 
@@ -52,6 +36,7 @@ escape_keycloak_db_pwd() {
     fi
 }
 
+# Sets Keycloak environment variables
 update_keycloak_env() {
 
     echo "Setting Keycloak environment variables."
@@ -61,6 +46,103 @@ update_keycloak_env() {
     echo "Environment processing completed."
 }
 
+# Cleans up temporary files
+cleanup_tmp_files() {
+
+    file_count=$(find /tmp -type f -name 'avalanchecms.*' | wc -l)
+    if [ $file_count -eq 0 ]; then
+        echo "No Avalanche CMS tmp files found in /tmp."
+        return 0
+    fi
+
+    find /tmp -type f -name 'avalanchecms.*' -exec rm {} +
+
+    if [ $? -eq 0 ]; then
+        echo "Successfully removed $file_count Avalanche CMS tmp files from /tmp."
+        return 0
+    else
+        echo "Failed to remove Avalanche CMS files from /tmp." >&2
+        return 1
+    fi
+}
+
+# Asserts the presence of secret hash files
+assert_secret_hash_files() {
+
+    local dir_path=$1
+
+    # Check if dir_path parameter is provided
+    if [ -z "$dir_path" ]; then
+        echo "Parameter 'dir_path' is missing for assert_secret_hash_files function." >&2
+        return 1
+    fi
+
+    if [ ! -d "$dir_path" ]; then
+        echo "Directory $dir_path does not exist, not adding any user credentials to Keycloak config."
+        return 2
+    fi
+
+    local hash_files_count=$(find "$dir_path" -maxdepth 1 -type f -name "*.hash" | wc -l)
+
+    if [ $hash_files_count -eq 0 ]; then
+        echo "No .hash files found in $dir_path, not adding any user credentials to Keycloak config."
+        return 2
+    else
+        echo "Found $hash_files_count .hash file(s) in $dir_path."
+        return 0
+    fi
+}
+
+# Updates the timestamp of users in Keycloak configuration
+update_users_timestamp() {
+
+    local input_file=$1
+    local current_epoch_ms=$2
+    local tmp_output_file=$3
+
+    # Check if input_file is provided
+    if [ -z "$input_file" ]; then
+        echo "Input file is missing." >&2
+        return 1
+    fi
+
+    # Calculate current_epoch_ms if not provided
+    if [ -z "$current_epoch_ms" ]; then
+        current_epoch_ms=$(date +%s%3N)
+    fi
+
+    # Create a temporary file if tmp_output_file is not provided
+    if [ -z "$tmp_output_file" ]; then
+        tmp_output_file=$(mktemp /tmp/avalanchecms.XXXXXX)
+    fi
+
+    # Set users createdTimestamp to current epoch
+    if jq --arg epoch "$current_epoch_ms" '
+        if .users and (.users | type) == "array" and (.users | length) > 0 then
+            .users |= map(
+                if .createdTimestamp then
+                    .createdTimestamp = ($epoch | tonumber)
+                else
+                    . + {"createdTimestamp": ($epoch | tonumber)}
+                end
+            )
+        else
+            .
+        end
+        ' "$input_file" > "$tmp_output_file"; then
+
+        # Using stdout for output data and stderr for log messages to separate data from diagnostics
+        echo "Successfully set all users createdTimestamp to current epoch ${current_epoch_ms} in Keycloak config." >&2
+        echo "$tmp_output_file"
+        
+        return 0
+    else
+        echo "Failed to set all users createdTimestamp to current epoch ${current_epoch_ms} in Keycloak config." >&2
+        return 1
+    fi
+}
+
+# Updates user credentials from a hash file in the Keycloak configuration
 update_user_credential_from_hash_file() {
 
     local keycloak_config_filepath=$1
@@ -160,81 +242,7 @@ update_user_credential_from_hash_file() {
     fi
 }
 
-update_users_timestamp() {
-
-    local input_file=$1
-    local current_epoch_ms=$2
-    local tmp_output_file=$3
-
-    # Check if input_file is provided
-    if [ -z "$input_file" ]; then
-        echo "Input file is missing." >&2
-        return 1
-    fi
-
-    # Calculate current_epoch_ms if not provided
-    if [ -z "$current_epoch_ms" ]; then
-        current_epoch_ms=$(date +%s%3N)
-    fi
-
-    # Create a temporary file if tmp_output_file is not provided
-    if [ -z "$tmp_output_file" ]; then
-        tmp_output_file=$(mktemp /tmp/avalanchecms.XXXXXX)
-    fi
-
-    # Set users createdTimestamp to current epoch
-    if jq --arg epoch "$current_epoch_ms" '
-        if .users and (.users | type) == "array" and (.users | length) > 0 then
-            .users |= map(
-                if .createdTimestamp then
-                    .createdTimestamp = ($epoch | tonumber)
-                else
-                    . + {"createdTimestamp": ($epoch | tonumber)}
-                end
-            )
-        else
-            .
-        end
-        ' "$input_file" > "$tmp_output_file"; then
-
-        # Using stdout for output data and stderr for log messages to separate data from diagnostics
-        echo "Successfully set all users createdTimestamp to current epoch ${current_epoch_ms} in Keycloak config." >&2
-        echo "$tmp_output_file"
-        
-        return 0
-    else
-        echo "Failed to set all users createdTimestamp to current epoch ${current_epoch_ms} in Keycloak config." >&2
-        return 1
-    fi
-}
-
-assert_secret_hash_files() {
-
-    local dir_path=$1
-
-    # Check if dir_path parameter is provided
-    if [ -z "$dir_path" ]; then
-        echo "Parameter 'dir_path' is missing for assert_secret_hash_files function." >&2
-        return 1
-    fi
-
-    if [ ! -d "$dir_path" ]; then
-        echo "Directory $dir_path does not exist, not adding any user credentials to Keycloak config."
-        return 2
-    fi
-
-    local hash_files_count=$(find "$dir_path" -maxdepth 1 -type f -name "*.hash" | wc -l)
-
-    if [ $hash_files_count -eq 0 ]; then
-        echo "No .hash files found in $dir_path, not adding any user credentials to Keycloak config."
-        return 2
-    else
-        echo "Found $hash_files_count .hash file(s) in $dir_path."
-        return 0
-    fi
-}
-
-
+# Updates the Keycloak configuration with user timestamps and credentials
 update_keycloak_config() {
 
     echo "Updating Keycloak config."
@@ -285,8 +293,8 @@ update_keycloak_config() {
     echo "Keycloak config processing completed."
 }
 
+# The main function orchestrating the setup process.
 main() {
-
     echo "Starting Keycloak setup process..."
 
     update_keycloak_env
