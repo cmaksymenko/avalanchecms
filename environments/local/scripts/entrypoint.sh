@@ -126,7 +126,6 @@ load_secret_envs() {
                                 var_content_trimmed=$(sed 's/^[ \t]*//;s/[ \t]*$//' "$var_value")
                                 export "$new_var_name=$var_content_trimmed"
 
-                                echo "Secret $new_var_name loaded from $var_value"
                                 exported_secrets=$((exported_secrets + 1))
 
                             else

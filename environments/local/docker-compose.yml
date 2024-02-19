@@ -51,13 +51,17 @@ services:
       PGADMIN_DEFAULT_EMAIL: pgadminuser@avalanchecms.com # admin user
       PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-user-secret.env
       PGADMIN_SERVER_JSON_FILE: /etc/avalanchecms/pgadmin-config.json
+      PGADMIN_OAUTH2_CLIENT_SECRET_FILE: /run/secrets/avalanchecms/pgadmin-keycloak-client-secret.env
       AV_APP_NAME: pgAdmin
       AV_ORIGINAL_ENTRYPOINT: /entrypoint.sh
+      AV_LOAD_SECRET_ENVS: true
     volumes:
       - pgadmin-data:/var/lib/pgadmin
       - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
+      - ./config/config_local.py:/pgadmin4/config_local.py:ro
       - ./config/pgadmin-config.json:/etc/avalanchecms/pgadmin-config.json:ro
       - ./../../.secrets/pgadmin-user-secret.env:/run/secrets/avalanchecms/pgadmin-user-secret.env:ro
+      - ./../../.secrets/pgadmin-keycloak-client-secret.env:/run/secrets/avalanchecms/pgadmin-keycloak-client-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
 
   # Keycloak IAM
