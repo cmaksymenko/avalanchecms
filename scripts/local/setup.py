@@ -42,6 +42,7 @@ SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
 SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
 
 secret_data = [
+    
     # Infrastructure components admin users
     ("Postgres Admin User", "postgres-admin-user-secret"),
     ("PgAdmin Admin User", "pgadmin-user-secret"),
@@ -56,7 +57,11 @@ secret_data = [
     ("Avalanche CMS App User 1", "avalanchecms-appuser1-secret", True),
     ("Avalanche CMS App User 2", "avalanchecms-appuser2-secret", True),
     ("Avalanche CMS Combined User", "avalanchecms-combineduser-secret", True),
-    ("Avalanche CMS No Group User", "avalanchecms-nogroupuser-secret", True)
+    ("Avalanche CMS No Group User", "avalanchecms-nogroupuser-secret", True),
+    
+    # Keycloak clients
+    ("pgAdmin Keycloak Client", "pgadmin-keycloak-client-secret")
+    
 ]
 
 secrets = [SecretDefinition(*data) for data in secret_data]
