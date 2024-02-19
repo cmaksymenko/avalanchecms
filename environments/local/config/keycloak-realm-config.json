@@ -94,6 +94,7 @@
   "clients": [
     {
       "clientId": "pgadmin",
+      "baseUrl": "/",
       "name": "pgAdmin",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
@@ -104,9 +105,10 @@
         "+"
       ],
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
-      "protocol": "openid-connect"
+      "protocol": "openid-connect",
+      "defaultClientScopes": ["web-origins","role_list","roles","profile","email"],
+      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"]
     }
   ]
 }
