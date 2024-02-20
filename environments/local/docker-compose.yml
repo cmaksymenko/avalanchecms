@@ -99,6 +99,7 @@ services:
       - ./../../.secrets/keycloak-admin-user-secret.env:/run/secrets/avalanchecms/keycloak-admin-user-secret.env:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
       - ./../../.secrets/hashes:/run/secrets/avalanchecms/hashes:ro
+      - ./../../.secrets/pgadmin-keycloak-client-secret.env:/run/secrets/avalanchecms/pgadmin-keycloak-client-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
     command: ["start-dev", "--import-realm"] # Development mode, never use for production
   
