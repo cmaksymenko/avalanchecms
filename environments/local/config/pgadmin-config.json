@@ -5,6 +5,7 @@
       "Group": "Avalanche CMS",
       "Port": 5432,
       "Username": "postgresadminuser",
+      "SharedUsername": "postgresadminuser",
       "Host": "postgres",
       "SSLMode": "prefer",
       "MaintenanceDB": "admin",
