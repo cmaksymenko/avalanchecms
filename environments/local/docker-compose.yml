@@ -52,7 +52,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-user-secret.env
       PGADMIN_SERVER_JSON_FILE: /etc/avalanchecms/pgadmin-config.json
       PGADMIN_OAUTH2_CLIENT_SECRET_FILE: /run/secrets/avalanchecms/pgadmin-keycloak-client-secret.env
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
       AV_APP_NAME: pgAdmin
       AV_ORIGINAL_ENTRYPOINT: /entrypoint.sh
       AV_LOAD_SECRET_ENVS: true
