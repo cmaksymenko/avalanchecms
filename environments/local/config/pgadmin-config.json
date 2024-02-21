@@ -8,7 +8,8 @@
       "Host": "postgres",
       "SSLMode": "prefer",
       "MaintenanceDB": "admin",
-      "Shared": true
+      "Shared": true,
+      "PassFile": "/tmp/passfile"
     }
   }
 }

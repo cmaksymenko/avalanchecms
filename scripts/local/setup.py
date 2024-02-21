@@ -26,14 +26,33 @@ import random
 import string
 import sys
 from pathlib import Path
+import json
 
 from cleanup import main as cleanup_main
 
-class SecretDefinition:
-    def __init__(self, name, base_filename, generate_hash=False):
-        self.name = name
-        self.base_filename = base_filename
-        self.generate_hash = generate_hash
+def read_credentials():
+    
+    file_path = './config/credentials.json'
+    
+    try:
+        with open(file_path, 'r') as file:
+            
+            data = json.load(file)
+        
+            for item in data:
+
+                if 'name' not in item or 'base_filename' not in item:
+                    sys.exit(f"Error: Each item must have 'name' and 'base_filename'. Missing in item: {item}")
+                    
+                if item.get('in_pgpass_file', False) and 'username' not in item:
+                    sys.exit(f"Error: 'username' must be present when 'in_pgpass_file' is true. Missing in item: {item}")
+            
+            return data
+        
+    except FileNotFoundError:
+        sys.exit(f"File not found: {file_path}")
+    except json.JSONDecodeError:
+        sys.exit(f"Error decoding JSON from the file: {file_path}")
 
 # Special characters for secure passwords
 SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
@@ -41,30 +60,6 @@ SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
 # Pool of characters for generating secrets: includes letters, digits, and special characters
 SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
 
-secret_data = [
-    
-    # Infrastructure components admin users
-    ("Postgres Admin User", "postgres-admin-user-secret"),
-    ("PgAdmin Admin User", "pgadmin-user-secret"),
-    ("Keycloak Admin User", "keycloak-admin-user-secret"),
-
-    # Database connection users
-    ("Postgres Avalanche CMS Database User", "postgres-avalanchecms-db-user-secret"),
-    ("Postgres Keycloak Database User", "postgres-keycloak-db-user-secret"),
-
-    # Avalanche CMS Keycloak users (with generate_hash=True)
-    ("Avalanche CMS Admin User", "avalanchecms-adminuser-secret", True),
-    ("Avalanche CMS App User 1", "avalanchecms-appuser1-secret", True),
-    ("Avalanche CMS App User 2", "avalanchecms-appuser2-secret", True),
-    ("Avalanche CMS Combined User", "avalanchecms-combineduser-secret", True),
-    ("Avalanche CMS No Group User", "avalanchecms-nogroupuser-secret", True),
-    
-    # Keycloak clients
-    ("pgAdmin Keycloak Client", "pgadmin-keycloak-client-secret")
-    
-]
-
-secrets = [SecretDefinition(*data) for data in secret_data]
 
 def find_project_root(current_file):
     
@@ -164,6 +159,23 @@ def hash_secret(secret, salt_length=16, iterations=27500, salt_base=None):
 
     except Exception as e:
         raise RuntimeError(f"Error during secret hashing: {e}")
+
+
+def write_pgpass_file(folder, hostname, port=5432, database="*", tuples=None):
+
+    if not all([hostname, tuples]):
+        raise ValueError("Hostname and tuples cannot be None or empty.")
+
+    pgpass_file_path = os.path.join(folder, '.pgpass')
+    with open(pgpass_file_path, 'w', newline='\n') as file:
+        
+        for username, password in tuples:
+            connection_string = f"{hostname}:{port}:{database}:{username}:{password}\n"
+            file.write(connection_string)
+
+    os.chmod(pgpass_file_path, 0o600)
+    
+    return pgpass_file_path
 
 
 def generate_random_password(length=22):
@@ -290,33 +302,59 @@ def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets
 
         if not os.path.exists(secrets_path):
             os.makedirs(secrets_path)
-
-        # Process each secret and create corresponding env file
-        for secret in secrets:
-
+            
+        credentials = read_credentials()
+        
+        # Process each secret and create corresponding env/hash files
+        for entry in credentials:
+            
+            name = entry.get("name")
+            base_filename = entry.get("base_filename")
+            username = entry.get("username", None)
+            generate_hash = entry.get("generate_hash", False)
+            in_pgpass_file = entry.get("in_pgpass_file", False)
+            
             # Construct file paths for secret (and hash) files
-            secret_file = os.path.join(secrets_path, secret.base_filename + ".env")
-            secret_file_hash = os.path.join(secrets_path, "hashes", secret.base_filename + ".hash") if secret.generate_hash else None
-
+            secret_file = os.path.join(secrets_path, base_filename + ".env")
+            secret_file_hash = os.path.join(secrets_path, "hashes", base_filename + ".hash") if generate_hash else None
+            entry["secret_file"] = secret_file
+            
             # Choose password: use provided, prompt, or auto-generate
-            secret_value = (password.strip() if password and password.strip()
-                            else prompt_for_secret(secret.name, auto))
-
+            secret_value = (password.strip() if password and password.strip() else prompt_for_secret(name, auto))
+            entry["secret_value"] = secret_value
+        
+            
             # Create secret (and hash) files on disk
             create_secret_file(secret_file, secret_value)
             if secret_file_hash is not None:
                 create_hash_file(path=secret_file_hash, secret=secret_value, salt_base=salt_base)
+                entry["secret_file_hash"] = secret_file_hash
+        
+        # pgAdmin Password File
+        
+        pgpass_credentials = []
+        
+        for entry in credentials:         
+            if entry.get('in_pgpass_file', False):
+                pgpass_credentials.append((entry.get('username'), entry.get('secret_value')))
 
+        if len(pgpass_credentials) > 0:
+            pgpass_file_path = write_pgpass_file(secrets_path, "postgres", 5432, "*", pgpass_credentials)           
+            print(f"pgAdmin Password File created at {pgpass_file_path}, number of credentials: {len(pgpass_credentials) }")
+            
+        else:
+            print("No secrets apply for pgAdmin Password File, skipping.")
+        
     else:
-        print("Skipping secret creation, because cleanup was performed with keeping secrets.")
+        print("Skipping secret creation, because cleanup was performed with keeping secrets.")    
 
     print("Avalanche CMS setup complete.")
 
     # Suggest auto mode if not used and no password provided
     if not auto and not password:
-        print("Tip: Use '--auto' for automatic setup.")
+        print("Tip: Use '--auto' for automatic setup.")             
 
-
+        
 def parse_args():
 
     parser = argparse.ArgumentParser(description="Avalanche CMS Setup: Interactive local development setup. Automatable with -a for strong random passwords. Manages secrets in '/.secrets' and Keycloak hashes in './secrets/hashes'. Use -c for full cleanup, resetting all data. Assumes 'scripts/local' location for repo root.")

@@ -3,7 +3,7 @@ import os
 SERVER_MODE = True
 MASTER_PASSWORD_REQUIRED = True
 DEBUG = True
-AUTHENTICATION_SOURCES = ['oauth2']
+AUTHENTICATION_SOURCES = ['oauth2', 'internal']
 OAUTH2_AUTO_CREATE_USER = True
 OAUTH2_CONFIG = [{
     'OAUTH2_NAME': 'keycloak',
