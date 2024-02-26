@@ -26,9 +26,7 @@ OAUTH2_CONFIG = [{
     'OAUTH2_SSL_CERT_VERIFICATION': False,
     
     'OAUTH2_ADDITIONAL_CLAIMS': { # Checked for mapping in the ID token
-        'realm_access': {
-            'roles': [ "admin" ]
-        }
+        'roles': [ "admin" ]
     }
     
 }]

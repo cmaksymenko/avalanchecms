@@ -108,7 +108,24 @@
       "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
       "defaultClientScopes": ["web-origins","role_list","roles","profile","email"],
-      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"]
+      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"],
+      "protocolMappers": [
+        {
+          "name": "pgAdmin User Role ID Token Mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "multivalued": "true",
+            "userinfo.token.claim": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
     }
   ]
 }
