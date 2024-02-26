@@ -17,9 +17,6 @@ main() {
         chmod 0600 "$PGPASSFILE"
         echo "Copied $SOURCE_FILE to $PGPASSFILE"
 
-        echo "Details of $PGPASSFILE:" && \
-        ls -l "$PGPASSFILE"
-
     else
         echo "Error: '$SOURCE_FILE' does not exist or is not readable."
     fi    
