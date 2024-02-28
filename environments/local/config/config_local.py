@@ -1,7 +1,13 @@
 import os
 
 SERVER_MODE = True
-AUTHENTICATION_SOURCES = ['oauth2', 'internal']
+
+AUTHENTICATION_SOURCES = ['oauth2']
+
+# Enable internal auth if PGADMIN_ENABLE_INTERNAL_AUTH is set
+if os.getenv('PGADMIN_ENABLE_INTERNAL_AUTH', '').lower() in ['true', '1', 'on', 'yes', 'y', 'enabled']:
+    AUTHENTICATION_SOURCES.append('internal')
+    
 MFA_ENABLED = False
 OAUTH2_AUTO_CREATE_USER = True
 MASTER_PASSWORD_REQUIRED = False
