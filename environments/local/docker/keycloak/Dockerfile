@@ -1,7 +1,7 @@
 ARG KEYCLOAK_VERSION=23.0
 
 # Stage 1: Build Stage with isolated install directory
-FROM registry.access.redhat.com/ubi9 AS ubi-micro-build
+FROM registry.access.redhat.com/ubi9:9.3 AS ubi-micro-build
 RUN mkdir -p /mnt/rootfs
 
 # Install jq with minimal dependencies and no docs, clean cache, and remove
