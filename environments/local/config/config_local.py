@@ -13,13 +13,15 @@ MFA_ENABLED = False
 OAUTH2_AUTO_CREATE_USER = True
 MASTER_PASSWORD_REQUIRED = False
 MAX_LOGIN_ATTEMPTS = 0
-DEBUG = True
 AUTO_DISCOVER_SERVERS = False
+
+USER_INACTIVITY_TIMEOUT = 900
+OVERRIDE_USER_INACTIVITY_TIMEOUT = True
 
 OAUTH2_CONFIG = [{
     
-    'OAUTH2_NAME': 'keycloak',
-    'OAUTH2_DISPLAY_NAME': 'keycloak',
+    'OAUTH2_NAME': 'Keycloak',
+    'OAUTH2_DISPLAY_NAME': 'Keycloak',
     'OAUTH2_CLIENT_ID': 'pgadmin',
     
     'OAUTH2_TOKEN_URL': 'http://host.docker.internal:8080/realms/avalanchecms/protocol/openid-connect/token',
@@ -34,14 +36,14 @@ OAUTH2_CONFIG = [{
     
     'OAUTH2_ADDITIONAL_CLAIMS': { # Checked for mapping in the ID token
         'roles': [ "admin" ]
-    }
-    
+    }    
 }]
 
 # Add OAUTH2_CLIENT_SECRET only if PGADMIN_OAUTH2_CLIENT_SECRET is set
 if 'PGADMIN_OAUTH2_CLIENT_SECRET' in os.environ:
     OAUTH2_CONFIG[0]['OAUTH2_CLIENT_SECRET'] = urllib.parse.quote(os.environ['PGADMIN_OAUTH2_CLIENT_SECRET'].strip())
 
-import logging
-FILE_LOG_LEVEL = logging.DEBUG
-CONSOLE_LOG_LEVEL = logging.DEBUG
+#import logging
+#FILE_LOG_LEVEL = logging.DEBUG
+#CONSOLE_LOG_LEVEL = logging.DEBUG
+#DEBUG = True
