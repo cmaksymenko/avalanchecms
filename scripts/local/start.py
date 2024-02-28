@@ -39,7 +39,7 @@ def require_docker_running(func):
 
 # Starts Avalanche CMS Docker containers
 @require_docker_running
-def start_docker_compose():
+def start_docker_compose(detach=False):
 
     try:
 
@@ -49,8 +49,13 @@ def start_docker_compose():
         
         # Change directory to where the docker-compose file is located
         os.chdir(env_dir)
+        
+        command = ['docker-compose', 'up', '--remove-orphans']
+        
+        if detach:
+            command.append('-d')
 
-        process = subprocess.Popen(["docker", "compose", "up", "--remove-orphans"])
+        process = subprocess.Popen(command)
 
         time.sleep(1)
 
@@ -79,7 +84,8 @@ def start_docker_compose():
 def main():
 
     parser = argparse.ArgumentParser(description="Avalanche CMS local development start script.")
-    parser.add_argument('-c', '--clean', action='store_true', help="Cleans and reinitializes the environment, deleting old data, volumes, containers and secrets.")    
+    parser.add_argument('-c', '--clean', action='store_true', help="Cleans and reinitializes the stack, deleting old data, volumes, containers and secrets.")
+    parser.add_argument('-d', '--detach', action='store_true', help="Runs the stack in detached mode.")
     args = parser.parse_args()
     
     if args.clean:
@@ -93,7 +99,7 @@ def main():
             
     print("Starting.")   
     try:
-        start_docker_compose()
+        start_docker_compose(detach=args.detach)
     except KeyboardInterrupt:
         print("Script execution interrupted by user.")
 
