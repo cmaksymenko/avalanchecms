@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 
 SERVER_MODE = True
 
@@ -39,7 +40,7 @@ OAUTH2_CONFIG = [{
 
 # Add OAUTH2_CLIENT_SECRET only if PGADMIN_OAUTH2_CLIENT_SECRET is set
 if 'PGADMIN_OAUTH2_CLIENT_SECRET' in os.environ:
-    OAUTH2_CONFIG[0]['OAUTH2_CLIENT_SECRET'] = os.environ['PGADMIN_OAUTH2_CLIENT_SECRET'].strip()
+    OAUTH2_CONFIG[0]['OAUTH2_CLIENT_SECRET'] = urllib.parse.quote(os.environ['PGADMIN_OAUTH2_CLIENT_SECRET'].strip())
 
 import logging
 FILE_LOG_LEVEL = logging.DEBUG
