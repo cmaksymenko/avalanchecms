@@ -4,7 +4,8 @@ Avalanche CMS Local Setup Script
 Manages local development setup for Avalanche CMS. By default, the script is 
 interactive, but can be automated using the -a option, generating strong 
 random passwords. It handles secrets generation, writes plaintext secrets to 
-'/.secrets', and hashes for Keycloak in './secrets/hashes'.
+'/.secrets', and hashes for Keycloak in './secrets/hashes'. It also updates
+existing Docker images (opt-out with -ki).
 
 Command Line Options:
 - -a, --auto: Automates setup with random strong passwords.
@@ -13,6 +14,7 @@ Command Line Options:
     - -kv, --keep-volumes: Retains Docker volumes.
     - -ks, --keep-secrets: Retains secrets and hashes in '.secrets'.
 - -s, --salt-base: Sets salt base for hashing (debug only).
+- -ki, --keep-images: Doesnt pull the latest Docker images.
 
 Use -c for a full cleanup, resetting the runtime setup and losing all data.
 Script assumes location in 'scripts/local' for repo root.
