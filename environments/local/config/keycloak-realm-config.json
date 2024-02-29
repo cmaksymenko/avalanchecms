@@ -107,7 +107,7 @@
       "standardFlowEnabled": true,
       "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
-      "defaultClientScopes": ["web-origins","role_list","roles","profile","email"],
+      "defaultClientScopes": ["web-origins","profile","email"],
       "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"],
       "protocolMappers": [
         {
