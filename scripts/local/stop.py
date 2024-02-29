@@ -1,34 +1,9 @@
 # Avalanche CMS Local Stack stop script
 
 import argparse
-import builtins
 import os
 import subprocess
-import sys
-import time
-from functools import wraps
-
-from setup import main as setup_main
-
-# Decorator that checks if the Docker engine is running, terminating the script if not
-def require_docker_running(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        
-        def is_docker_running():
-            try:
-                subprocess.run(["docker", "info"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                return True
-            except subprocess.CalledProcessError:
-                return False
-
-        if not is_docker_running():
-            print("Docker engine is not running. Please start Docker engine and try again.")
-            sys.exit(1)
-
-        return func(*args, **kwargs)
-
-    return wrapper
+from utils.decorators import require_docker_running
 
 # Stops Avalanche CMS Docker containers
 @require_docker_running

@@ -11,35 +11,12 @@ import re
 import shutil
 import subprocess
 import sys
-from functools import wraps
-
+from utils.decorators import require_docker_running
 
 # Redefine the print function to always flush by default
 def print(*args, **kwargs):
     kwargs.setdefault('flush', True)
     return builtins.print(*args, **kwargs)
-
-
-# Decorator that checks if the Docker engine is running, terminating the script if not
-def require_docker_running(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        
-        def is_docker_running():
-            try:
-                subprocess.run(["docker", "info"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                return True
-            except subprocess.CalledProcessError:
-                return False
-
-        if not is_docker_running():
-            print("Docker engine is not running. Please start Docker engine and try again.")
-            sys.exit(1)
-
-        return func(*args, **kwargs)
-
-    return wrapper
-
 
 # Get all Docker volumes, returning them as a list
 # On failure, an empty list is returned

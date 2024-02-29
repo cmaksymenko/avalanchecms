@@ -3,39 +3,31 @@
 import argparse
 import builtins
 import os
-import re
-import shutil
 import subprocess
 import sys
 import time
-from functools import wraps
-
+from pull import main as pull_main
 from setup import main as setup_main
+from utils.decorators import require_docker_running
 
 # Redefine the print function to always flush by default
 def print(*args, **kwargs):
     kwargs.setdefault('flush', True)
     return builtins.print(*args, **kwargs)
 
-# Decorator that checks if the Docker engine is running, terminating the script if not
-def require_docker_running(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
+@require_docker_running
+def update_docker_images(keep_images=False):
+    
+    if not keep_images:
         
-        def is_docker_running():
-            try:
-                subprocess.run(["docker", "info"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                return True
-            except subprocess.CalledProcessError:
-                return False
-
-        if not is_docker_running():
-            print("Docker engine is not running. Please start Docker engine and try again.")
-            sys.exit(1)
-
-        return func(*args, **kwargs)
-
-    return wrapper
+        print("Updating Docker images.")
+        try:
+            pull_main()
+        except Exception as e:
+            print("Error during Docker image update:", e)
+            sys.exit(1)        
+    else:
+        print("Skipping Docker image update.")
 
 # Starts Avalanche CMS Docker containers
 @require_docker_running
@@ -86,18 +78,23 @@ def main():
     parser = argparse.ArgumentParser(description="Avalanche CMS local development start script.")
     parser.add_argument('-c', '--clean', action='store_true', help="Cleans and reinitializes the stack, deleting old data, volumes, containers and secrets.")
     parser.add_argument('-d', '--detach', action='store_true', help="Runs the stack in detached mode.")
+    parser.add_argument('-ki', '--keep-images', action='store_true', help="Doesnt pull the latest Docker images.")
     args = parser.parse_args()
     
     if args.clean:
         
         print("Cleaning and reinitializing environment.")
         try:
-            setup_main(auto=True, clean=True)
+            setup_main(auto=True, clean=True, keep_images=args.keep_images)
+            
         except Exception as e:
             print("Error during cleanup and reinitialization:", e)
             sys.exit(1)
+    else:
+        if not args.keep_images:
+            update_docker_images(keep_images=args.keep_images)
             
-    print("Starting.")   
+    print("Starting.")
     try:
         start_docker_compose(detach=args.detach)
     except KeyboardInterrupt:

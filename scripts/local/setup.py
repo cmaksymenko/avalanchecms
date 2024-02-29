@@ -21,14 +21,14 @@ Script assumes location in 'scripts/local' for repo root.
 import argparse
 import base64
 import hashlib
+import json
 import os
 import random
 import string
 import sys
-from pathlib import Path
-import json
-
 from cleanup import main as cleanup_main
+from pull import main as pull_main
+from utils.decorators import require_docker_running
 
 def read_credentials():
     
@@ -266,26 +266,10 @@ def create_hash_file(path, secret, salt_base=None):
 
         print(f"Hash file created: {path}")
     else:
-        print(f"Existing hash file: {path}, skipped")
+        print(f"Existing hash file: {path}, skipped")       
 
-
-# Main
-def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None):
+def clean_environment(clean=False, keep_volumes=None, keep_secrets=None):
     
-    """
-    Main Avalanche CMS setup function.
-    """    
-
-    if not password:
-        print(f"{'Auto' if auto else 'Manual'} mode.")
-
-    if password is not None and password.strip():
-        print("Common password set.")
-    else:
-        if password is not None:
-            print("Error: Invalid password.")
-            sys.exit(1)
-
     if clean:
         
         print("Cleaning environment.")
@@ -293,8 +277,17 @@ def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets
             cleanup_main(keep_volumes, keep_secrets)
         except Exception as e:
             print("Error during cleanup:", e)
-            sys.exit(1)
+            sys.exit(1)    
 
+def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None):
+    
+    if password is not None and password.strip():
+        print("Common password set.")
+    else:
+        if password is not None:
+            print("Error: Invalid password.")
+            sys.exit(1)    
+    
     if not keep_secrets:
 
         project_root = find_project_root(__file__)
@@ -346,8 +339,36 @@ def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets
             print("No secrets apply for pgAdmin Password File, skipping.")
         
     else:
-        print("Skipping secret creation, because cleanup was performed with keeping secrets.")    
+        print("Skipping secret creation, because cleanup was performed with keeping secrets.")     
 
+@require_docker_running
+def update_docker_images(keep_images=False):
+    
+    if not keep_images:
+        
+        print("Updating Docker images.")
+        try:
+            pull_main()
+        except Exception as e:
+            print("Error during Docker image update:", e)
+            sys.exit(1)        
+    else:
+        print("Skipping Docker image update.")
+
+# Main
+def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None, keep_images=False):
+    
+    """
+    Main Avalanche CMS setup function.
+    """    
+
+    if not password:
+        print(f"{'Auto' if auto else 'Manual'} mode.")
+
+    clean_environment(clean=clean, keep_volumes=keep_volumes, keep_secrets=keep_secrets)
+    create_secrets(keep_secrets=keep_secrets, auto=auto, password=password, salt_base=salt_base)
+    update_docker_images(keep_images=keep_images)
+        
     print("Avalanche CMS setup complete.")
 
     # Suggest auto mode if not used and no password provided
@@ -363,6 +384,7 @@ def parse_args():
     parser.add_argument('-p', '--password', type=str, help="Sets a specific password. Enclose symbols in single quotes.")
     parser.add_argument('-c', '--clean', action='store_true', help="Cleans the environment for a full reset. Additional options: -kv, --keep-volumes: Retains Docker volumes; -ks, --keep-secrets: Retains secrets and hashes in '.secrets'")
     parser.add_argument('-s', '--salt-base', type=str, help="Sets salt base for hashing (debug only), defaults to random.")
+    parser.add_argument('-ki', '--keep-images', action='store_true', help="Doesnt pull the latest Docker images.")
 
     args, remaining_argv = parser.parse_known_args()
     
@@ -370,8 +392,8 @@ def parse_args():
     if args.clean:
         
         purge_parser = argparse.ArgumentParser()
-        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true')
-        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true')
+        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
+        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
         purge_args = purge_parser.parse_args(remaining_argv)
         
     return args, remaining_argv, purge_args
@@ -386,4 +408,4 @@ if __name__ == "__main__":
     
     main(auto=args.auto, password=args.password, clean=args.clean, 
          keep_volumes=keep_volumes, keep_secrets=keep_secrets, 
-         salt_base=args.salt_base)
+         salt_base=args.salt_base, keep_images=args.keep_images)
