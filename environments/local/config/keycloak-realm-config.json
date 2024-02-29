@@ -108,7 +108,6 @@
       "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
       "defaultClientScopes": ["web-origins","profile","email"],
-      "optionalClientScopes": ["address","phone","offline_access","microprofile-jwt"],
       "protocolMappers": [
         {
           "name": "pgAdmin User Role ID Token Mapper",
