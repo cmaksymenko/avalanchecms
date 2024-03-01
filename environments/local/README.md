@@ -1,4 +1,4 @@
-# Avalanche CMS Local Stack
+# Avalanche CMS Local Stack Deployment
 
 ## Introduction
 

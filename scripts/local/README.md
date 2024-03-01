@@ -1,4 +1,4 @@
-# Avalanche CMS Local Development Environment Scripts
+# Avalanche CMS Local Stack Scripts
 
 This collection of scripts is designed to streamline the setup, management, and maintenance of the Avalanche CMS local development environment using Docker. Each script serves a specific role in the lifecycle of the development environment, from initialization to cleanup.
 

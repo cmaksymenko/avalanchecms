@@ -1,5 +1,5 @@
 # This script automates Keycloak setup, including escaping database passwords,
-# and updating user credentials.
+# and updating user and client credentials.
 
 #!/bin/sh
 
@@ -57,17 +57,16 @@ cleanup_tmp_files() {
 
     file_count=$(find /tmp -type f -name 'avalanchecms.*' | wc -l)
     if [ $file_count -eq 0 ]; then
-        echo "No Avalanche CMS tmp files found in /tmp."
+        echo "No Avalanche CMS tmp files found." >&2
         return 0
     fi
 
-    find /tmp -type f -name 'avalanchecms.*' -exec rm {} +
-
+    find /tmp -type f -name 'avalanchecms.*' -delete
     if [ $? -eq 0 ]; then
-        echo "Successfully removed $file_count Avalanche CMS tmp files from /tmp."
+        echo "Successfully removed $file_count Avalanche CMS tmp files." >&2
         return 0
     else
-        echo "Failed to remove Avalanche CMS files from /tmp." >&2
+        echo "Failed to remove Avalanche CMS files." >&2
         return 1
     fi
 }
@@ -89,22 +88,22 @@ assert_secret_hash_files() {
 
     # Check if dir_path parameter is provided
     if [ -z "$dir_path" ]; then
-        echo "Parameter 'dir_path' is missing for assert_secret_hash_files function." >&2
+        echo "Parameter 'dir_path' is missing." >&2
         return 1
     fi
 
     if [ ! -d "$dir_path" ]; then
-        echo "Directory $dir_path does not exist, not adding any user credentials to Keycloak config."
+        echo "Directory does not exist." >&2
         return 2
     fi
 
     local hash_files_count=$(find "$dir_path" -maxdepth 1 -type f -name "*.hash" | wc -l)
 
     if [ $hash_files_count -eq 0 ]; then
-        echo "No .hash files found in $dir_path, not adding any user credentials to Keycloak config."
+        echo "No .hash files found." >&2
         return 2
     else
-        echo "Found $hash_files_count .hash file(s) in $dir_path."
+        echo "Found $hash_files_count .hash file(s)."
         return 0
     fi
 }
@@ -126,22 +125,22 @@ assert_client_secret_files() {
 
     # Check if dir_path parameter is provided
     if [ -z "$dir_path" ]; then
-        echo "Parameter 'dir_path' is missing for assert_client_secret_files function." >&2
+        echo "Parameter 'dir_path' is missing." >&2
         return 1
     fi
 
     if [ ! -d "$dir_path" ]; then
-        echo "Directory $dir_path does not exist, not adding any client credentials to Keycloak config."
+        echo "Directory does not exist." >&2
         return 2
     fi
 
     local client_secret_files_count=$(find "$dir_path" -maxdepth 1 -type f -name "*[^-]-keycloak-client-secret.env" | wc -l)
 
     if [ $client_secret_files_count -eq 0 ]; then
-        echo "No client secret files found in $dir_path, not adding any client credentials to Keycloak config."
+        echo "No client secret files found." >&2
         return 2
     else
-        echo "Found $client_secret_files_count client secret file(s) in $dir_path."
+        echo "Found $client_secret_files_count client secret file(s)."
         return 0
     fi
 }
@@ -194,11 +193,10 @@ update_users_timestamp() {
         end
         ' "$input_file" > "$tmp_output_file"; then
 
-        # Using stdout for output data and stderr for log messages to separate data from diagnostics
-        echo "Successfully set all users createdTimestamp to current epoch ${current_epoch_ms} in Keycloak config." >&2      
+        echo "Users' createdTimestamp set to current epoch in Keycloak config." >&2      
         return 0
     else
-        echo "Failed to set all users createdTimestamp to current epoch ${current_epoch_ms} in Keycloak config." >&2
+        echo "Failed to set users' createdTimestamp in Keycloak config." >&2
         return 1
     fi
 }
@@ -217,13 +215,12 @@ update_users_timestamp() {
 #   0 on success, 1 on error.
 #
 update_user_credential_from_hash_file() {
-
     local keycloak_config_filepath=$1
     local hash_filepath=$2
     local keycloak_tmp_config=$3
     local current_epoch_ms=$4
 
-    # Required args check
+    # Check arguments
     if [ -z "$hash_filepath" ] || [ -z "$keycloak_config_filepath" ]; then
         [ -z "$hash_filepath" ] && echo "Hash file path is required." >&2
         [ -z "$keycloak_config_filepath" ] && echo "Keycloak config filepath is required." >&2
@@ -232,8 +229,8 @@ update_user_credential_from_hash_file() {
 
     # Check if the files actually exist
     if [ ! -f "$hash_filepath" ] || [ ! -f "$keycloak_config_filepath" ]; then
-        [ ! -f "$hash_filepath" ] && echo "Hash file at '$hash_filepath' does not exist." >&2
-        [ ! -f "$keycloak_config_filepath" ] && echo "Keycloak config file at '$keycloak_config_filepath' does not exist." >&2
+        [ ! -f "$hash_filepath" ] && echo "Hash file does not exist." >&2
+        [ ! -f "$keycloak_config_filepath" ] && echo "Keycloak config file does not exist." >&2
         return 1
     fi
 
@@ -246,22 +243,21 @@ update_user_credential_from_hash_file() {
 
     local user_id=$(echo "$filename" | sed -n 's/^.*-\(.*\)-secret\.hash$/\1/p')
     if [ -z "$user_id" ]; then
-        echo "Warning: Filename '$filename' does not follow hash pattern, skipping."
+        echo "Warning: Filename does not follow hash pattern, skipping."
         return 0
     fi
 
     if jq --arg user_id "$user_id" '.users[] | select(.username == $user_id)' "$keycloak_config_filepath" | grep -q .; then
-
         # Check if keycloak_tmp_config is provided
         if [ -n "$keycloak_tmp_config" ]; then
             if [ ! -f "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
-                echo "Provided Keycloak temporary output config file at '$keycloak_tmp_config' does not exist or is not writable." >&2
+                echo "Error: Provided Keycloak temporary output config file is invalid." >&2
                 return 1
             fi
         else
             keycloak_tmp_config=$(mktemp /tmp/avalanchecms.XXXXXX)
         fi    
-    
+
         echo "User ${user_id} found in Keycloak config for hash file ${filename}."
 
         # Check if the file contains all required keys
@@ -275,7 +271,7 @@ update_user_credential_from_hash_file() {
         done
 
         if [ ${#missing_keys[@]} -ne 0 ]; then
-            echo "Missing keys in hash file ${filename}: ${missing_keys[*]}" >&2
+            echo "Error: Missing keys in hash file ${filename}: ${missing_keys[*]}" >&2
             return 1
         fi        
 
@@ -310,59 +306,64 @@ update_user_credential_from_hash_file() {
 
         return 0
     else
-        echo "User ${user_id} not found in Keycloak config for hash file ${filename}, skipping."
+        echo "User ${user_id} not found in Keycloak config, skipping."
         return 0
     fi
 }
 
+# Update users' credentials from hash files.
+#
+# Parameters:
+#   keycloak_config_updated_from: Path to the updated Keycloak config file.
+#   keycloak_tmp_config: Path to the temporary Keycloak config file.
+#
 update_users_credentials_from_hash_files() {
 
     local hashes_dir="/run/secrets/avalanchecms/hashes"
-
     local keycloak_config_updated_from="$1"
     local keycloak_tmp_config="$2"
 
-    if [ -z "$keycloak_config_updated_from" ] || [ ! -r "$keycloak_config_updated_from" ]; then
-        echo "Error: 'keycloak_config_updated_from' argument is required and must be a readable file." >&2
+    # Check arguments
+    if [ -z "$keycloak_config_updated_from" ] || [ ! -r "$keycloak_config_updated_from" ] || \
+       [ -z "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
+        echo "Error: Invalid arguments provided." >&2
         return 1
     fi
-
-    if [ -z "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
-        echo "Error: 'keycloak_tmp_config' argument is required and must be a writable file." >&2
-        return 1
-    fi      
 
     local keycloak_config_updated_user_credentials="${keycloak_config_updated_from}"
 
     if assert_secret_hash_files "$hashes_dir"; then
-
         echo "Processing user credentials..."
 
         for hash_filepath in "$hashes_dir"/*.hash; do
-
             local keycloak_config_updated_to=$(mktemp /tmp/avalanchecms.XXXXXX)
 
             update_user_credential_from_hash_file "${keycloak_config_updated_from}" "${hash_filepath}" "${keycloak_config_updated_to}"
             if [ $? -ne 0 ]; then
-                echo "Error occurred in update_user_credential_from_hash_file." >&2
+                echo "Error updating user credential from hash file." >&2
                 return 1
             fi
 
             keycloak_config_updated_user_credentials="${keycloak_config_updated_to}"
             keycloak_config_updated_from="${keycloak_config_updated_to}"
-
         done
 
         mv "${keycloak_config_updated_user_credentials}" "${keycloak_tmp_config}"
-
     elif [ $? -eq 2 ]; then
-        echo "Skipping user credential processing due to no hash files found..."
+        echo "No hash files found, skipping user credential processing."
     else
         echo "An error occurred, exiting..." >&2
         return 1
     fi
 }
 
+# Update client credential in Keycloak config.
+#
+# Parameters:
+#   keycloak_config_filepath: Path to the Keycloak config file.
+#   client_secret_filepath: Path to the client secret file.
+#   keycloak_tmp_config: Path to the temporary Keycloak config file.
+#
 update_client_credential() {
 
     local keycloak_config_filepath=$1
@@ -378,8 +379,8 @@ update_client_credential() {
 
     # Check if the files actually exist
     if [ ! -f "$client_secret_filepath" ] || [ ! -f "$keycloak_config_filepath" ]; then
-        [ ! -f "$client_secret_filepath" ] && echo "Client secret file at '$client_secret_filepath' does not exist." >&2
-        [ ! -f "$keycloak_config_filepath" ] && echo "Keycloak config file at '$keycloak_config_filepath' does not exist." >&2
+        [ ! -f "$client_secret_filepath" ] && echo "Client secret file does not exist." >&2
+        [ ! -f "$keycloak_config_filepath" ] && echo "Keycloak config file does not exist." >&2
         return 1
     fi
 
@@ -387,90 +388,85 @@ update_client_credential() {
 
     local client_id=$(echo "$filename" | sed 's/-keycloak-client-secret\.env$//')
     if [ -z "$client_id" ]; then
-        echo "Warning: Filename '$filename' does not follow client secret pattern, skipping."
+        echo "Warning: Filename does not follow client secret pattern, skipping."
         return 0
     fi
 
     # Check if file is non-empty
-    if [ -s "$client_secret_filepath" ]; then
+    if [ ! -s "$client_secret_filepath" ]; then
+        echo "Error: Client secret file is empty." >&2
+        return 1
+    fi
 
-        # Ensure file has a single non-blank line
-        line_count=$(sed -n '$=' "$client_secret_filepath")
-        if [ "$line_count" -eq 1 ] && [ -n "$(sed -n '/^[ \t]*[^ \t]/p;q' "$client_secret_filepath")" ]; then
-            
-            content_trimmed=$(sed 's/^[ \t]*//;s/[ \t]*$//' "$client_secret_filepath")
+    # Ensure file has a single non-blank line
+    line_count=$(sed -n '$=' "$client_secret_filepath")
+    if [ "$line_count" -ne 1 ] || [ -z "$(sed -n '/^[ \t]*[^ \t]/p;q' "$client_secret_filepath")" ]; then
+        echo "Error: Client secret file must have 1 non-blank line." >&2
+        return 1
+    fi
 
-            if jq --arg client_id "$client_id" '.clients[] | select(.clientId == $client_id)' "$keycloak_config_filepath" | grep -q .; then
-                
-                # Check if keycloak_tmp_config is provided
-                if [ -n "$keycloak_tmp_config" ]; then
-                    if [ ! -f "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
-                        echo "Provided Keycloak temporary output config file at '$keycloak_tmp_config' does not exist or is not writable." >&2
-                        return 1
-                    fi
-                else
-                    keycloak_tmp_config=$(mktemp /tmp/avalanchecms.XXXXXX)
-                fi    
-            
-                echo "Client ${client_id} found in Keycloak config for client secret file ${filename}."
+    content_trimmed=$(sed 's/^[ \t]*//;s/[ \t]*$//' "$client_secret_filepath")
 
-                jq --arg client_id "$client_id" --arg secret "$content_trimmed" \
-                '(.clients[] | select(.clientId == $client_id) .secret) |= $secret' \
-                "$keycloak_config_filepath" > "$keycloak_tmp_config"
-
-                # Check for success
-                if [ $? -eq 0 ]; then
-                    echo "Credential for client '${client_id}' added to Keycloak config."
-                else
-                    echo "Failed to add credential for client '${client_id}' to Keycloak config." >&2
-                    return 1
-                fi                
-            else
-                echo "Client ${client_id} not found in Keycloak config for client secret file ${filename}, skipping."
-                return 0
+    if jq --arg client_id "$client_id" '.clients[] | select(.clientId == $client_id)' "$keycloak_config_filepath" | grep -q .; then
+        # Check if keycloak_tmp_config is provided
+        if [ -n "$keycloak_tmp_config" ]; then
+            if [ ! -f "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
+                echo "Error: Provided Keycloak temporary output config file is invalid." >&2
+                return 1
             fi
         else
-            echo "Error: '$filename' must have 1 non-blank line." >&2
+            keycloak_tmp_config=$(mktemp /tmp/avalanchecms.XXXXXX)
+        fi    
+
+        echo "Client ${client_id} found in Keycloak config."
+
+        jq --arg client_id "$client_id" --arg secret "$content_trimmed" \
+        '(.clients[] | select(.clientId == $client_id) .secret) |= $secret' \
+        "$keycloak_config_filepath" > "$keycloak_tmp_config"
+
+        # Check for success
+        if [ $? -eq 0 ]; then
+            echo "Credential for client '${client_id}' added to Keycloak config."
+        else
+            echo "Failed to add credential for client '${client_id}' to Keycloak config." >&2
             return 1
         fi
     else
-        echo "Error: '$filename' is unreadable or empty." >&2
-        return 1
+        echo "Client ${client_id} not found in Keycloak config, skipping."
+        return 0
     fi
 }
 
+# Update client credentials in Keycloak config.
+#
+# Parameters:
+#   keycloak_config_updated_from: Path to the updated Keycloak config file.
+#   keycloak_tmp_config: Path to the temporary Keycloak config file.
+#
 update_clients_credentials() {
 
     local secrets_dir="/run/secrets/avalanchecms"
-
     local keycloak_config_updated_from="$1"
     local keycloak_tmp_config="$2"
 
-    if [ -z "$keycloak_config_updated_from" ] || [ ! -r "$keycloak_config_updated_from" ]; then
-        echo "Error: 'keycloak_config_updated_from' argument is required and must be a readable file." >&2
-        return 1
-    fi
-
-    if [ -z "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
-        echo "Error: 'keycloak_tmp_config' argument is required and must be a writable file." >&2
+    if [ -z "$keycloak_config_updated_from" ] || [ ! -r "$keycloak_config_updated_from" ] || \
+       [ -z "$keycloak_tmp_config" ] || [ ! -w "$keycloak_tmp_config" ]; then
+        echo "Error: Invalid arguments provided." >&2
         return 1
     fi      
 
     local keycloak_config_updated_client_credentials="${keycloak_config_updated_from}"
 
     if assert_client_secret_files "$secrets_dir"; then
-
         echo "Processing client credentials..."
 
         for client_secret_filepath in "$secrets_dir"/*.env; do
-
             if echo "$client_secret_filepath" | grep -q '[^-]-keycloak-client-secret.env$'; then
-                
                 local keycloak_config_updated_to=$(mktemp /tmp/avalanchecms.XXXXXX)
 
                 update_client_credential "${keycloak_config_updated_from}" "${client_secret_filepath}" "${keycloak_config_updated_to}"
                 if [ $? -ne 0 ]; then
-                    echo "Error occurred in update_client_credential." >&2
+                    echo "Error updating client credential." >&2
                     return 1
                 fi
 
@@ -478,12 +474,10 @@ update_clients_credentials() {
                 keycloak_config_updated_from="${keycloak_config_updated_to}"                
                 
                 mv "${keycloak_config_updated_client_credentials}" "${keycloak_tmp_config}"
-
             fi
         done
-
     elif [ $? -eq 2 ]; then
-        echo "Skipping client credential processing due to no secret files found..."
+        echo "No secret files found, skipping client credential processing."
     else
         echo "An error occurred, exiting..." >&2
         return 1
@@ -493,26 +487,24 @@ update_clients_credentials() {
 # Updates Keycloak config with user timestamps and credentials. Moves final
 # config to /opt/keycloak/data/import/ for automatic import by Keycloak.
 update_keycloak_config() {
-
+    
     echo "Updating Keycloak config."
     cleanup_tmp_files
 
     # Step 1 - Update user timestamps
     orig_config="/tmp/avalanchecms/keycloak-realm-config.orig.json"
     updated_timestamps=$(mktemp /tmp/avalanchecms.XXXXXX)
-    update_users_timestamp "${orig_config}" "${updated_timestamps}"
-    if [ $? -ne 0 ]; then
-        echo "Error occurred in update_users_timestamp." >&2
+    update_users_timestamp "${orig_config}" "${updated_timestamps}" || {
+        echo "Error updating user timestamps." >&2
         return 1
-    fi
+    }
 
     # Step 2 - Update user credentials
     updated_user_credentials=$(mktemp /tmp/avalanchecms.XXXXXX)
-    update_users_credentials_from_hash_files "${updated_timestamps}" "${updated_user_credentials}"
-    if [ $? -ne 0 ]; then
-        echo "Error occurred in update_users_credentials_from_hash_files." >&2
+    update_users_credentials_from_hash_files "${updated_timestamps}" "${updated_user_credentials}" || {
+        echo "Error updating user credentials." >&2
         return 1
-    fi
+    }
 
     # Step 3 - Update client credentials
     updated_client_credentials=$(mktemp /tmp/avalanchecms.XXXXXX)
@@ -524,27 +516,26 @@ update_keycloak_config() {
     mv "${updated_client_credentials}" /opt/keycloak/data/import/keycloak-realm-config.json
 
     cleanup_tmp_files
-    echo "Keycloak config processing completed."
+    echo "Keycloak config updated."
 }
-
 
 # Main
 main() {
-    echo "Starting Keycloak setup process..."
+    echo "Starting Keycloak setup."
 
     update_keycloak_env
     if [ $? -ne 0 ]; then
-        echo "Error occurred in update_keycloak_env." >&2
+        echo "Env update error." >&2
         return 1
     fi
 
     update_keycloak_config
     if [ $? -ne 0 ]; then
-        echo "Error occurred in update_keycloak_config." >&2
+        echo "Config update error." >&2
         return 1
     fi
 
-    echo "Keycloak setup completed."
+    echo "Setup completed."
 }
 
 main

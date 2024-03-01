@@ -1,7 +1,7 @@
 #!/bin/sh
 
 main() {
-    echo "Starting pgAdmin setup process..."
+    echo "Starting setup."
 
     SOURCE_FILE="/run/secrets/avalanchecms/.pgpass"
 
@@ -10,18 +10,18 @@ main() {
         if [ -z "$PGPASSFILE" ]; then
             PGPASSFILE="/tmp/passfile"
             export PGPASSFILE
-            echo "Setting env var PGPASSFILE to ${PGPASSFILE}"
+            echo "PGPASSFILE set to ${PGPASSFILE}"
         fi
 
-        cp "$SOURCE_FILE" "$PGPASSFILE" && \
-        chmod 0600 "$PGPASSFILE"
-        echo "Copied $SOURCE_FILE to $PGPASSFILE"
+        if cp "$SOURCE_FILE" "$PGPASSFILE" && chmod 0600 "$PGPASSFILE"; then
+            echo "Configured $PGPASSFILE"
+        fi
 
     else
-        echo "Error: '$SOURCE_FILE' does not exist or is not readable."
+        echo "Error: Source file issue."
     fi    
 
-    echo "pgAdmin setup completed."
+    echo "Setup completed."
 }
 
 main
