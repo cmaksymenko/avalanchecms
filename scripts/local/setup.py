@@ -5,7 +5,7 @@ Manages local development setup for Avalanche CMS. By default, the script is
 interactive, but can be automated using the -a option, generating strong 
 random passwords. It handles secrets generation, writes plaintext secrets to 
 '/.secrets', and hashes for Keycloak in './secrets/hashes'. It also updates
-existing Docker images (opt-out with -ki).
+existing Docker images (opt-in with -ip).
 
 Command Line Options:
 - -a, --auto: Automates setup with random strong passwords.
@@ -14,7 +14,7 @@ Command Line Options:
     - -kv, --keep-volumes: Retains Docker volumes.
     - -ks, --keep-secrets: Retains secrets and hashes in '.secrets'.
 - -s, --salt-base: Sets salt base for hashing (debug only).
-- -ki, --keep-images: Doesnt pull the latest Docker images.
+- -ip, --image-pull: Pulls latest Docker images, if set
 
 Use -c for a full cleanup, resetting the runtime setup and losing all data.
 Script assumes location in 'scripts/local' for repo root.
@@ -345,9 +345,9 @@ def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None)
         print("Skipping secret creation, because cleanup was performed with keeping secrets.")     
 
 @require_docker_running
-def update_docker_images(keep_images=False):
+def update_docker_images(image_pull=False):
     
-    if not keep_images:
+    if image_pull:
         
         print("Updating Docker images.")
         try:
@@ -359,7 +359,7 @@ def update_docker_images(keep_images=False):
         print("Skipping Docker image update.")
 
 # Main
-def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None, keep_images=False):
+def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None, image_pull=False):
     
     """
     Main Avalanche CMS setup function.
@@ -370,7 +370,7 @@ def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets
 
     clean_environment(clean=clean, keep_volumes=keep_volumes, keep_secrets=keep_secrets)
     create_secrets(keep_secrets=keep_secrets, auto=auto, password=password, salt_base=salt_base)
-    update_docker_images(keep_images=keep_images)
+    update_docker_images(image_pull=image_pull)
         
     print("Avalanche CMS setup complete.")
 
@@ -387,7 +387,7 @@ def parse_args():
     parser.add_argument('-p', '--password', type=str, help="Sets a specific password. Enclose symbols in single quotes.")
     parser.add_argument('-c', '--clean', action='store_true', help="Cleans the environment for a full reset. Additional options: -kv, --keep-volumes: Retains Docker volumes; -ks, --keep-secrets: Retains secrets and hashes in '.secrets'")
     parser.add_argument('-s', '--salt-base', type=str, help="Sets salt base for hashing (debug only), defaults to random.")
-    parser.add_argument('-ki', '--keep-images', action='store_true', help="Doesnt pull the latest Docker images.")
+    parser.add_argument('-ip', '--image-pull', action='store_true', help="Pulls the latest Docker images.")
 
     args, remaining_argv = parser.parse_known_args()
     
@@ -411,4 +411,4 @@ if __name__ == "__main__":
     
     main(auto=args.auto, password=args.password, clean=args.clean, 
          keep_volumes=keep_volumes, keep_secrets=keep_secrets, 
-         salt_base=args.salt_base, keep_images=args.keep_images)
+         salt_base=args.salt_base, image_pull=args.image_pull)
