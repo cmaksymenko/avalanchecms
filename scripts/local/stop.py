@@ -1,4 +1,9 @@
-# Avalanche CMS Local Stack stop script
+"""
+Stops Avalanche CMS local Docker stack.
+
+Safely shuts down Docker containers for Avalanche CMS. Checks for Docker,
+handles errors, and supports graceful interruption.
+"""
 
 import argparse
 import os
@@ -9,6 +14,10 @@ from utils.output import print
 # Stops Avalanche CMS Docker containers
 @require_docker_running
 def stop_docker_compose():
+    
+    """
+    Stops local Avalanche CMS Docker containers.
+    """
     
     try:
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -22,11 +31,11 @@ def stop_docker_compose():
         subprocess.run(["docker", "compose", "down"], check=True)
 
     except subprocess.CalledProcessError as e:
-        print(f"Failed to stop Docker environment: {e}")
+        print(f"Stop failed: {e}")
     except FileNotFoundError:
-        print("Docker Compose file not found. Are you in the correct directory?")
+        print("Compose file missing.")
     except KeyboardInterrupt:
-        print("Script interrupted.")
+        print("Interrupted.")
     finally:
         # Change back to the original directory
         os.chdir(original_dir)
@@ -34,14 +43,15 @@ def stop_docker_compose():
 # Main
 def main():
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS local development stop script.")
+    parser = argparse.ArgumentParser(description="Avalanche CMS local development stack stop.")
     args = parser.parse_args()
     
-    print("Stopping.", flush=True) 
+    print("Stopping.") 
     try:
         stop_docker_compose()
+        print("Stopped.") 
     except KeyboardInterrupt:
-        print("Script execution interrupted by user.")
+        print("Interrupted.")
 
 if __name__ == "__main__":
     main()
