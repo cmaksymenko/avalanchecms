@@ -1,5 +1,5 @@
 """
-Avalanche CMS Local Setup Script
+Avalanche CMS Local Cleanup Script
 
 Cleans the local development environment for Avalanche CMS.
 
@@ -184,7 +184,7 @@ def main(keep_volumes=False, keep_secrets=False):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Avalanche CMS local development cleanup script.")
+    parser = argparse.ArgumentParser(description="Avalanche CMS Local Cleanup Script.")
     parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
     parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
     args = parser.parse_args()
