@@ -1,7 +1,16 @@
-# Avalanche CMS Local Stack start script
+"""
+Starts Avalanche CMS local Docker stack.
+
+Optionally cleans data and updates Docker images. Runs containers and supports detached mode.
+
+Usage:
+- Default: starts containers as is.
+- '-c': Clean start.
+- '-d': Detached mode.
+- '-ip': Pull latest images.
+"""
 
 import argparse
-import builtins
 import os
 import subprocess
 import sys
@@ -12,25 +21,31 @@ from utils.decorators import require_docker_running
 from utils.output import print
 
 @require_docker_running
-def update_docker_images(keep_images=False):
+def update_docker_images(image_pull=False):
     
-    if not keep_images:
-        
-        print("Updating Docker images.")
+    """
+    Updates Docker images if 'image_pull' is True.
+    """
+    
+    if image_pull:
+        print("Updating images.")
         try:
             pull_main()
         except subprocess.CalledProcessError as e:
-            print(f"Error updating Docker images: {e}. Check your Docker setup and network connection.")
+            print(f"Update error: {e}")
             sys.exit(1)            
         except Exception as e:
-            print(f"Unexpected error during Docker image update: {e}")
+            print(f"Unexpected error: {e}")
             sys.exit(1)
     else:
-        print("Skipping Docker image update.")
+        print("Update skipped.")
 
-# Starts Avalanche CMS Docker containers
 @require_docker_running
 def start_docker_compose(detach=False):
+    
+    """
+    Starts Docker containers for Avalanche CMS. Supports detached mode.
+    """
 
     try:
 
@@ -51,53 +66,50 @@ def start_docker_compose(detach=False):
         time.sleep(1)
 
         if process.poll() is None:
-            print("Docker environment started successfully.")
+            print("Started successfully.")
             process.wait()
         else:
-            print("Failed to start Docker environment.")
+            print("Start failed.")
             return
 
     except subprocess.CalledProcessError as e:
-        print(f"Failed to start Docker environment: {e}")
+        print(f"Start failed: {e}")
 
     except FileNotFoundError:
-        print("Docker Compose file not found. Are you in the correct directory?")
+        print("Compose file missing.")
 
     except KeyboardInterrupt:
-        print("Script interrupted. Gracefully shutting down.")
+        print("Interrupted. Shutting down.")
         
     finally:
 
         # Change back to the original directory
         os.chdir(original_dir)
 
-# Main
 def main():
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS local development start script.")
-    parser.add_argument('-c', '--clean', action='store_true', help="Cleans and reinitializes the stack, deleting old data, volumes, containers and secrets.")
-    parser.add_argument('-d', '--detach', action='store_true', help="Runs the stack in detached mode.")
-    parser.add_argument('-ki', '--keep-images', action='store_true', help="Doesnt pull the latest Docker images.")
+    parser = argparse.ArgumentParser(description="Starts Avalanche CMS Docker stack.")
+    parser.add_argument('-c', '--clean', action='store_true', help="Clean start, deletes data.")
+    parser.add_argument('-d', '--detach', action='store_true', help="Detached mode.")
+    parser.add_argument('-ip', '--image-pull', action='store_true', help="Updates Docker images.")
+
     args = parser.parse_args()
     
     if args.clean:
-        
-        print("Cleaning and reinitializing environment.")
+        print("Cleaning environment.")
         try:
-            setup_main(auto=True, clean=True, keep_images=args.keep_images)
-            
+            setup_main(auto=True, clean=True, image_pull=False)
         except Exception as e:
-            print("Error during cleanup and reinitialization:", e)
+            print(f"Cleanup error: {e}")
             sys.exit(1)
-    else:
-        if not args.keep_images:
-            update_docker_images(keep_images=args.keep_images)
-            
+
+    update_docker_images(image_pull=args.image_pull)
+    
     print("Starting.")
     try:
         start_docker_compose(detach=args.detach)
     except KeyboardInterrupt:
-        print("Script execution interrupted by user.")
+        print("Interrupted by user.")
         sys.exit(0)
 
 if __name__ == "__main__":

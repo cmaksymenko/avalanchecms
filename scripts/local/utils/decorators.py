@@ -1,11 +1,9 @@
 """
 decorators.py
 
-Provides decorators to enhance functionality within scripts.
+Contains decorators for script functionality.
 
-Decorators:
-- @require_docker_running: Ensures Docker engine is running before function
-  execution. Useful for Docker-dependent scripts and applications.
+- @require_docker_running: Checks if Docker is running.
 """
 
 from functools import wraps
@@ -16,13 +14,7 @@ from .output import print
 def require_docker_running(func):
 
     """
-    Ensures Docker engine is active before the decorated function runs.
-
-    Args:
-        func (Callable): Function to decorate.
-
-    Returns:
-        Callable: Decorated function with Docker check.
+    Decorator to check Docker status before running func.
     """
 
     @wraps(func)
@@ -43,7 +35,7 @@ def require_docker_running(func):
                 return False
 
         if not is_docker_running():
-            print("Docker not running. Please start it and try again.")
+            print("Docker not running.")
             sys.exit(1)
 
         return func(*args, **kwargs)

@@ -167,8 +167,8 @@ def main(keep_volumes=False, keep_secrets=False):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Avalanche CMS Cleanup.")
-    parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
-    parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
+    parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Keeps Docker volumes')
+    parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Keeps secrets in /.secrets')
     args = parser.parse_args()
     return args
 

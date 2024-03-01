@@ -353,13 +353,12 @@ def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets
 
 def parse_args():
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS Local Development Environment Setup Script. Automatable with -a for strong random passwords. Manages secrets in '/.secrets' and Keycloak hashes in './secrets/hashes'. Use -c for full cleanup, resetting all data. Assumes 'scripts/local' location for repo root.")
-
-    parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with random strong passwords.')
-    parser.add_argument('-p', '--password', type=str, help="Sets a specific password. Enclose symbols in single quotes.")
-    parser.add_argument('-c', '--clean', action='store_true', help="Cleans the environment for a full reset. Additional options: -kv, --keep-volumes: Retains Docker volumes; -ks, --keep-secrets: Retains secrets and hashes in '.secrets'")
-    parser.add_argument('-s', '--salt-base', type=str, help="Sets salt base for hashing (debug only), defaults to random.")
-    parser.add_argument('-ip', '--image-pull', action='store_true', help="Pulls the latest Docker images.")
+    parser = argparse.ArgumentParser(description="Setup script for Avalanche CMS.")
+    parser.add_argument('-a', '--auto', action='store_true', help='Enables automatic setup.')
+    parser.add_argument('-p', '--password', type=str, help="Sets a custom password.")
+    parser.add_argument('-c', '--clean', action='store_true', help="Fully resets the environment.")
+    parser.add_argument('-s', '--salt-base', type=str, help="Custom salt base for hashing.")
+    parser.add_argument('-ip', '--image-pull', action='store_true', help="Updates Docker images.")
 
     args, remaining_argv = parser.parse_known_args()
     
@@ -367,8 +366,8 @@ def parse_args():
     if args.clean:
         
         purge_parser = argparse.ArgumentParser()
-        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
-        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
+        purge_parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Keeps Docker volumes')
+        purge_parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Keeps secrets in /.secrets')
         purge_args = purge_parser.parse_args(remaining_argv)
         
     return args, remaining_argv, purge_args

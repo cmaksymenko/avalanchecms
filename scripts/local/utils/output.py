@@ -1,10 +1,9 @@
 """
 output.py
 
-Enhances script logging.
+Improves logging.
 
-Functions:
-- print: Redefines print to flush immediately, making messages visible without delay.
+- print: Flushes print messages instantly.
 """
 
 import builtins
@@ -12,16 +11,8 @@ import builtins
 def print(*args, **kwargs):
     
     """
-    Redefines print for immediate output, aiding visibility in buffered
-    environments like Docker logs. Useful for fast diagnostics.
-
-    Args:
-        *args: Arguments to print.
-        **kwargs: Keyword arguments. Defaults to 'flush=True'.
-
-    Returns:
-        None.
-    """  
+    Modified print for instant output. Adds 'flush=True'.
+    """
     
     kwargs.setdefault('flush', True)
     return builtins.print(*args, **kwargs)
