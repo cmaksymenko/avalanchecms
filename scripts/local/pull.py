@@ -1,5 +1,4 @@
 """
-
 Pulls Docker images for Avalanche CMS local dev setup.
 
 Automates image pulling to ensure consistency. Reads image list from
