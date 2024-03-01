@@ -1,5 +1,5 @@
 """
-Avalanche CMS Local Setup Script
+Avalanche CMS Local Development Environment Setup Script
 
 Manages local development setup for Avalanche CMS. By default, the script is 
 interactive, but can be automated using the -a option, generating strong 
@@ -35,20 +35,34 @@ from utils.output import print
 
 def read_credentials():
     
+    """
+    Reads and validates credentials from configuration.
+    
+    Validates that each credential item contains mandatory fields: 'name' and
+    'base_filename'. If 'in_pgpass_file' is true, 'username' must also be present.
+    
+    Returns:
+        data (list of dict): Validated list of credentials.
+    
+    Exits:
+        If the file doesn't exist, can't be decoded, or data validation fails.
+    """
+    
     file_path = './config/credentials.json'
     
     try:
         with open(file_path, 'r') as file:
-            
             data = json.load(file)
-        
+            
             for item in data:
-
+                
+                # validate mandatory fields.
                 if 'name' not in item or 'base_filename' not in item:
-                    sys.exit(f"Error: Each item must have 'name' and 'base_filename'. Missing in item: {item}")
-                    
+                    sys.exit(f"Error: Missing 'name'/'base_filename' in item: {item}")
+                
+                # validate 'username' for items marked for inclusion in pgpass file
                 if item.get('in_pgpass_file', False) and 'username' not in item:
-                    sys.exit(f"Error: 'username' must be present when 'in_pgpass_file' is true. Missing in item: {item}")
+                    sys.exit("Error: Missing 'username' when 'in_pgpass_file' is true.")
             
             return data
         
@@ -165,21 +179,43 @@ def hash_secret(secret, salt_length=16, iterations=27500, salt_base=None):
 
 
 def write_pgpass_file(folder, hostname, port=5432, database="*", tuples=None):
+    
+    """
+    Creates a .pgpass file in the specified folder with connection details for PostgreSQL.
 
+    Parameters:
+        folder (str): The directory where the .pgpass file will be created.
+        hostname (str): The hostname of the PostgreSQL server.
+        port (int): The port number of the PostgreSQL server. Defaults to 5432.
+        database (str): The target database name. Defaults to "*", allowing connection to any database.
+        tuples (list of tuple): A list of tuples, each containing a username and a password.
+
+    Returns:
+        str: The path to the created or updated .pgpass file.
+
+    Raises:
+        ValueError: If hostname or tuples are None or empty, indicating missing required information.
+    """
+
+    # validate required parameters
     if not all([hostname, tuples]):
         raise ValueError("Hostname and tuples cannot be None or empty.")
 
     pgpass_file_path = os.path.join(folder, '.pgpass')
+
+    # create the file
     with open(pgpass_file_path, 'w', newline='\n') as file:
-        
         for username, password in tuples:
+            
+            # format connection string for each user-password pair
             connection_string = f"{hostname}:{port}:{database}:{username}:{password}\n"
+            
             file.write(connection_string)
 
+    # secure the .pgpass file by setting its file permission to 0600 (read/write for owner only)
     os.chmod(pgpass_file_path, 0o600)
     
     return pgpass_file_path
-
 
 def generate_random_password(length=22):
     
@@ -273,97 +309,117 @@ def create_hash_file(path, secret, salt_base=None):
 
 def clean_environment(clean=False, keep_volumes=None, keep_secrets=None):
     
+    """
+    Optionally cleans up the environment.
+    
+    Parameters:
+        clean (bool): If True, initiates the cleanup process. Default is False.
+        keep_volumes (bool): Specifies if volumes should be kept.
+        keep_secrets (bool): Specifies if secret files should be kept.
+    """
+    
     if clean:
-        
         print("Cleaning environment.")
         try:
+
             cleanup_main(keep_volumes, keep_secrets)
+
         except Exception as e:
             print("Error during cleanup:", e)
-            sys.exit(1)    
+            sys.exit(1)
+
 
 def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None):
+    
+    """
+    Creates secret files for Avalanche CMS, including hash files for
+    user secrets. Supports using a common password, auto-generation, or 
+    interactive prompting for secrets. Also generates a 
+    .pgpass file for PostgreSQL connections.
+
+    Parameters:
+        keep_secrets (bool): If True, skips secret creation.
+        auto (bool): If True, automatically generates secrets without prompting.
+        password (str): A common password to use for all secrets (for debugging).
+        salt_base (str): A base string used to salt hashes (for debugging).
+    """
     
     if password is not None and password.strip():
         print("Common password set.")
     else:
         if password is not None:
             print("Error: Invalid password.")
-            sys.exit(1)    
+            sys.exit(1)
     
     if not keep_secrets:
 
         project_root = find_project_root(__file__)
         secrets_path = os.path.join(project_root, '.secrets')
-
         if not os.path.exists(secrets_path):
             os.makedirs(secrets_path)
-            
-        credentials = read_credentials()
         
-        # Process each secret and create corresponding env/hash files
+        credentials = read_credentials()  # load credentials config
+
         for entry in credentials:
             
-            name = entry.get("name")
-            base_filename = entry.get("base_filename")
-            username = entry.get("username", None)
+            # prepare target paths for secrets and hashes
+            name, base_filename = entry.get("name"), entry.get("base_filename")
+            secret_file = os.path.join(secrets_path, f"{base_filename}.env")
             generate_hash = entry.get("generate_hash", False)
-            in_pgpass_file = entry.get("in_pgpass_file", False)
-            
-            # Construct file paths for secret (and hash) files
-            secret_file = os.path.join(secrets_path, base_filename + ".env")
-            secret_file_hash = os.path.join(secrets_path, "hashes", base_filename + ".hash") if generate_hash else None
-            entry["secret_file"] = secret_file
-            
-            # Choose password: use provided, prompt, or auto-generate
-            secret_value = (password.strip() if password and password.strip() else prompt_for_secret(name, auto))
-            entry["secret_value"] = secret_value
-        
-            
-            # Create secret (and hash) files on disk
-            create_secret_file(secret_file, secret_value)
-            if secret_file_hash is not None:
-                create_hash_file(path=secret_file_hash, secret=secret_value, salt_base=salt_base)
+            secret_file_hash = None
+            if generate_hash:
+                secret_file_hash = os.path.join(secrets_path, "hashes", f"{base_filename}.hash")
                 entry["secret_file_hash"] = secret_file_hash
-        
-        # pgAdmin Password File
-        
-        pgpass_credentials = []
-        
-        for entry in credentials:         
-            if entry.get('in_pgpass_file', False):
-                pgpass_credentials.append((entry.get('username'), entry.get('secret_value')))
 
-        if len(pgpass_credentials) > 0:
-            pgpass_file_path = write_pgpass_file(secrets_path, "postgres", 5432, "*", pgpass_credentials)           
-            print(f"pgAdmin Password File created at {pgpass_file_path}, number of credentials: {len(pgpass_credentials) }")
-            
+            # read/generate secret value
+            secret_value = password.strip() if password and password.strip() else prompt_for_secret(name, auto)
+            entry["secret_value"] = secret_value
+
+            # write to file
+            create_secret_file(secret_file, secret_value)
+            if generate_hash:
+                create_hash_file(secret_file_hash, secret_value, salt_base)
+        
+        # generate .pgpass file.
+        pgpass_credentials = [(entry["username"], entry["secret_value"]) for entry in credentials if entry.get("in_pgpass_file", False)]
+        if pgpass_credentials:
+            pgpass_file_path = write_pgpass_file(secrets_path, "postgres", 5432, "*", pgpass_credentials)
+            print(f"pgAdmin Password File created at {pgpass_file_path}, number of credentials: {len(pgpass_credentials)}")
         else:
             print("No secrets apply for pgAdmin Password File, skipping.")
-        
     else:
-        print("Skipping secret creation, because cleanup was performed with keeping secrets.")     
+        print("Skipping secret creation due to keeping secrets on cleanup.")
 
 @require_docker_running
 def update_docker_images(image_pull=False):
+    
+    """
+    Updates Docker images if opted in.
+
+    Parameters:
+        image_pull (bool): If true, pull is performed.
+    """
     
     if image_pull:
         
         print("Updating Docker images.")
         try:
-            pull_main()
+            
+            pull_main()  # pull images
+            
         except Exception as e:
-            print("Error during Docker image update:", e)
-            sys.exit(1)        
+            print(f"Error during Docker image update: {e}")
+            sys.exit(1)
     else:
         print("Skipping Docker image update.")
 
-# Main
 def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None, image_pull=False):
     
     """
     Main Avalanche CMS setup function.
     """    
+    
+    print("Setting up Avalanche CMS Local Development Environment.")
 
     if not password:
         print(f"{'Auto' if auto else 'Manual'} mode.")
@@ -372,16 +428,15 @@ def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets
     create_secrets(keep_secrets=keep_secrets, auto=auto, password=password, salt_base=salt_base)
     update_docker_images(image_pull=image_pull)
         
-    print("Avalanche CMS setup complete.")
+    print("Avalanche CMS Local Development Environment setted up.")
 
     # Suggest auto mode if not used and no password provided
     if not auto and not password:
         print("Tip: Use '--auto' for automatic setup.")             
 
-        
 def parse_args():
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS Setup: Interactive local development setup. Automatable with -a for strong random passwords. Manages secrets in '/.secrets' and Keycloak hashes in './secrets/hashes'. Use -c for full cleanup, resetting all data. Assumes 'scripts/local' location for repo root.")
+    parser = argparse.ArgumentParser(description="Avalanche CMS Local Development Environment Setup Script. Automatable with -a for strong random passwords. Manages secrets in '/.secrets' and Keycloak hashes in './secrets/hashes'. Use -c for full cleanup, resetting all data. Assumes 'scripts/local' location for repo root.")
 
     parser.add_argument('-a', '--auto', action='store_true', help='Automates setup with random strong passwords.')
     parser.add_argument('-p', '--password', type=str, help="Sets a specific password. Enclose symbols in single quotes.")
@@ -400,7 +455,6 @@ def parse_args():
         purge_args = purge_parser.parse_args(remaining_argv)
         
     return args, remaining_argv, purge_args
-
 
 if __name__ == "__main__":
     
