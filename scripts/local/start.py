@@ -9,11 +9,7 @@ import time
 from pull import main as pull_main
 from setup import main as setup_main
 from utils.decorators import require_docker_running
-
-# Redefine the print function to always flush by default
-def print(*args, **kwargs):
-    kwargs.setdefault('flush', True)
-    return builtins.print(*args, **kwargs)
+from utils.output import print
 
 @require_docker_running
 def update_docker_images(keep_images=False):
@@ -23,9 +19,12 @@ def update_docker_images(keep_images=False):
         print("Updating Docker images.")
         try:
             pull_main()
+        except subprocess.CalledProcessError as e:
+            print(f"Error updating Docker images: {e}. Check your Docker setup and network connection.")
+            sys.exit(1)            
         except Exception as e:
-            print("Error during Docker image update:", e)
-            sys.exit(1)        
+            print(f"Unexpected error during Docker image update: {e}")
+            sys.exit(1)
     else:
         print("Skipping Docker image update.")
 
@@ -66,7 +65,7 @@ def start_docker_compose(detach=False):
 
     except KeyboardInterrupt:
         print("Script interrupted. Gracefully shutting down.")
-
+        
     finally:
 
         # Change back to the original directory
@@ -99,6 +98,7 @@ def main():
         start_docker_compose(detach=args.detach)
     except KeyboardInterrupt:
         print("Script execution interrupted by user.")
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()

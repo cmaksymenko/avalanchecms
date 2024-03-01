@@ -12,11 +12,7 @@ import shutil
 import subprocess
 import sys
 from utils.decorators import require_docker_running
-
-# Redefine the print function to always flush by default
-def print(*args, **kwargs):
-    kwargs.setdefault('flush', True)
-    return builtins.print(*args, **kwargs)
+from utils.output import print
 
 # Get all Docker volumes, returning them as a list
 # On failure, an empty list is returned

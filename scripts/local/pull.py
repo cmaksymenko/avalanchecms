@@ -4,11 +4,7 @@ import json
 import os
 import subprocess
 from utils.decorators import require_docker_running
-
-# Redefine the print function to always flush by default
-def print(*args, **kwargs):
-    kwargs.setdefault('flush', True)
-    return builtins.print(*args, **kwargs)
+from utils.output import print
 
 @require_docker_running
 def pull_docker_images():

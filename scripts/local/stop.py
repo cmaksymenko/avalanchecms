@@ -4,6 +4,7 @@ import argparse
 import os
 import subprocess
 from utils.decorators import require_docker_running
+from utils.output import print
 
 # Stops Avalanche CMS Docker containers
 @require_docker_running

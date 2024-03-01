@@ -31,6 +31,7 @@ import sys
 from cleanup import main as cleanup_main
 from pull import main as pull_main
 from utils.decorators import require_docker_running
+from utils.output import print
 
 def read_credentials():
     
