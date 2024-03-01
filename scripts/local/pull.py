@@ -1,10 +1,9 @@
 """
-Avalanche CMS Local Docker Image Pull Script
 
-Automates pulling Docker images for Avalanche CMS local development setup, 
-ensuring a consistent environment across developers.
+Pulls Docker images for Avalanche CMS local dev setup.
 
-Reads image list from ./config/docker_images.json
+Automates image pulling to ensure consistency. Reads image list from
+./config/docker_images.json.
 
 Usage: Run without arguments.
 """
@@ -20,10 +19,7 @@ from utils.output import print
 def pull_docker_images():
     
     """
-    Pulls Docker images for Avalanche CMS.
-    
-    Reads Docker image names from './config/docker_images.json' and
-    attempts to pull it using the Docker CLI.
+    Pulls Docker images for Avalanche CMS from './config/docker_images.json'.
     """
     
     json_file_path = './config/docker_images.json'
@@ -45,16 +41,11 @@ def pull_docker_images():
 
     print("Docker images pulled successfully.")
 
-def main():
-    
-    """
-    Main
-    """
-    
+def main():  
     pull_docker_images()
     
 def parse_args():
-    parser = argparse.ArgumentParser(description="Avalanche CMS Local Docker Image Pull Script.")
+    parser = argparse.ArgumentParser(description="Avalanche CMS Local Docker Image Pull.")
     args = parser.parse_args()
     return args
 

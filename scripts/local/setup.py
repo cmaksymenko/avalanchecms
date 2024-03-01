@@ -1,23 +1,15 @@
 """
-Avalanche CMS Local Development Environment Setup Script
+Sets up the Avalanche CMS local dev environment.
 
-Manages local development setup for Avalanche CMS. By default, the script is 
-interactive, but can be automated using the -a option, generating strong 
-random passwords. It handles secrets generation, writes plaintext secrets to 
-'/.secrets', and hashes for Keycloak in './secrets/hashes'. It also updates
-existing Docker images (opt-in with -ip).
+Supports interactive or automated setup for secrets, Docker image updates,
+and environment reset with options for preserving volumes and secrets.
 
-Command Line Options:
-- -a, --auto: Automates setup with random strong passwords.
-- -p, --password: Sets a specific password.
-- -c, --clean: Cleans the environment for a full reset. Additional options:
-    - -kv, --keep-volumes: Retains Docker volumes.
-    - -ks, --keep-secrets: Retains secrets and hashes in '.secrets'.
-- -s, --salt-base: Sets salt base for hashing (debug only).
-- -ip, --image-pull: Pulls latest Docker images, if set
-
-Use -c for a full cleanup, resetting the runtime setup and losing all data.
-Script assumes location in 'scripts/local' for repo root.
+Options:
+- -a, --auto: Automated setup with generated passwords.
+- -c, --clean: Full reset. Can keep volumes (-kv) and secrets (-ks).
+- -s, --salt-base: Set salt base (debug).
+- -p, --password: Specify a password (debug)
+- -ip, --image-pull: Update Docker images.
 """
 
 import argparse
@@ -33,19 +25,19 @@ from pull import main as pull_main
 from utils.decorators import require_docker_running
 from utils.output import print
 
+# Special characters for secure passwords
+SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
+
+# Pool of characters for generating secrets: includes letters, digits, and special characters
+SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
+
 def read_credentials():
     
     """
-    Reads and validates credentials from configuration.
-    
-    Validates that each credential item contains mandatory fields: 'name' and
-    'base_filename'. If 'in_pgpass_file' is true, 'username' must also be present.
-    
-    Returns:
-        data (list of dict): Validated list of credentials.
-    
-    Exits:
-        If the file doesn't exist, can't be decoded, or data validation fails.
+    Reads and validates credentials from a config, requiring 'name', 
+    'base_filename', and 'username' if 'in_pgpass_file' is true.
+
+    Returns validated credentials or exits on errors.
     """
     
     file_path = './config/credentials.json'
@@ -71,44 +63,32 @@ def read_credentials():
     except json.JSONDecodeError:
         sys.exit(f"Error decoding JSON from the file: {file_path}")
 
-# Special characters for secure passwords
-SECRET_SPECIAL_CHARS = "!@#$%^&*()-_=+[]{};:,.<>/?|"
-
-# Pool of characters for generating secrets: includes letters, digits, and special characters
-SECRET_CHAR_POOL = string.ascii_letters + string.digits + SECRET_SPECIAL_CHARS
-
-
 def find_project_root(current_file):
     
     """
-    Determines the project's root directory from the current script's file path.
+    Finds project root directory based on script's file path.
 
-    Parameters:
-        current_file (str): File path of the script.
+    Args:
+        current_file (str): Script file path.
 
     Returns:
-        str: Root directory path of the project.
-    """    
+        Root directory path.
+    """ 
     
     # Assuming the script is in 'scripts/local'
     # Adjust the number of os.path.dirname calls based on actual script location
     return os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
 
-
 def generate_deterministic_salt(base_string, salt_length=16):
     
     """
-    Generates a deterministic salt from a base string using SHA-256 hashing.
+    Generates a deterministic salt using SHA-256 hash of 'base_string'.
 
-    Parameters:
-        base_string (str): Non-empty, non-whitespace string for hashing.
-        salt_length (int): Length of the salt, between 1 and 32 (default is 16).
+    Args:
+        base_string (str): Input string for hashing.
+        salt_length (int): Desired salt length, 1-32, default 16.
 
-    Returns:
-        bytes: Salt derived from the SHA-256 hash of 'base_string'.
-
-    Raises:
-        ValueError: If 'base_string' is invalid or 'salt_length' is out of range.
+    Returns salt or raises ValueError on invalid input.
     """
     
     if base_string is None:
@@ -126,26 +106,17 @@ def generate_deterministic_salt(base_string, salt_length=16):
     hashed = hashlib.sha256(stripped_string.encode()).digest()
     return hashed[:salt_length]
 
-
 def hash_secret(secret, salt_length=16, iterations=27500, salt_base=None):
-
+    
     """
-    Hashes a secret using PBKDF2 for Keycloak, defaulting to random salts for security.
+    Hashes a secret using PBKDF2, supports deterministic salts for debugging.
 
-    The 'salt_base' parameter is for debugging and should not be set in regular usage.
+    Args:
+        secret (str): Secret to hash.
+        salt_length, iterations (int, optional): Salt length and iterations.
+        salt_base (str, optional): Debugging use only.
 
-    Parameters:
-        secret (str): The secret to hash.
-        salt_length (int, optional): Length of the salt in bytes. Default is 16.
-        iterations (int, optional): Number of hashing iterations. Default is 27500.
-        salt_base (str, optional): Base for deterministic salt (debugging use only).
-
-    Returns:
-        dict: Contains 'algorithm', 'iterations', 'salt', and 'hash'.
-
-    Raises:
-        ValueError: If 'secret' is invalid.
-        RuntimeError: For errors during hashing.
+    Returns hash details or raises errors on failure.
     """
 
     if not isinstance(secret, str) or not secret:
@@ -177,24 +148,17 @@ def hash_secret(secret, salt_length=16, iterations=27500, salt_base=None):
     except Exception as e:
         raise RuntimeError(f"Error during secret hashing: {e}")
 
-
 def write_pgpass_file(folder, hostname, port=5432, database="*", tuples=None):
     
     """
-    Creates a .pgpass file in the specified folder with connection details for PostgreSQL.
+    Writes .pgpass for PostgreSQL connections in specified folder.
 
-    Parameters:
-        folder (str): The directory where the .pgpass file will be created.
-        hostname (str): The hostname of the PostgreSQL server.
-        port (int): The port number of the PostgreSQL server. Defaults to 5432.
-        database (str): The target database name. Defaults to "*", allowing connection to any database.
-        tuples (list of tuple): A list of tuples, each containing a username and a password.
+    Args:
+        folder (str): Target directory.
+        hostname (str), port (int), database (str): Connection details.
+        tuples (list of tuple): Username and password pairs.
 
-    Returns:
-        str: The path to the created or updated .pgpass file.
-
-    Raises:
-        ValueError: If hostname or tuples are None or empty, indicating missing required information.
+    Returns path to .pgpass or raises ValueError on missing info.
     """
 
     # validate required parameters
@@ -220,33 +184,17 @@ def write_pgpass_file(folder, hostname, port=5432, database="*", tuples=None):
 def generate_random_password(length=22):
     
     """
-    Generates a random password.
-
-    Parameters:
-        length (int, optional): The length of the password. Defaults to 22.
-
-    Returns:
-        str: A randomly generated password string.
-    """    
+    Generates a random password of specified length. Default length is 22.
+    """
     
     return ''.join(random.choice(SECRET_CHAR_POOL) for i in range(length))
-
 
 def prompt_for_secret(description, auto=False):
     
     """
-    Prompts for a secret or generates one automatically.
-
-    If 'auto' is True, a secret is generated automatically. Otherwise, it prompts the user for input.
-    An empty or whitespace-only input will trigger automatic generation.
-
-    Parameters:
-        description (str): Description of the secret for prompting.
-        auto (bool, optional): Flag to generate secret automatically. Defaults to False.
-
-    Returns:
-        str: A user-provided or automatically generated secret.
-    """    
+    Prompts for a secret or generates one automatically based on 'auto' flag.
+    Triggers auto-generation on empty input. Description provided for prompt.
+    """
     
     if not auto:
         user_input = input(f"Secret for {description} [Enter=random]: ").strip()
@@ -257,18 +205,10 @@ def prompt_for_secret(description, auto=False):
     
     return generate_random_password()
 
-
 def create_secret_file(path, secret):
     
     """
-    Creates a file with the given secret if it doesn't exist.
-
-    Parameters:
-        path (str): Path to create the secret file.
-        secret (str): Secret to write to the file.
-
-    Note:
-        Does not overwrite existing files.
+    Creates a secret file at 'path' if not existing, without overwriting.
     """
 
     if not os.path.exists(path):
@@ -278,19 +218,11 @@ def create_secret_file(path, secret):
     else:
         print(f"Existing secret file: {path}, skipped")
 
-
 def create_hash_file(path, secret, salt_base=None):
     
     """
-    Creates a hash file for a secret at 'path', if not already present.
-
-    Parameters:
-        path (str): File path for the hash file.
-        secret (str): Secret to hash.
-        salt_base (str, optional): Base for salt derivation, random if not set.
-
-    Note:
-        Skips creation if the file already exists.
+    Creates a hash file from a secret at 'path', with optional 'salt_base'.
+    Skips if file exists.
     """
 
     if not os.path.exists(path):
@@ -310,12 +242,7 @@ def create_hash_file(path, secret, salt_base=None):
 def clean_environment(clean=False, keep_volumes=None, keep_secrets=None):
     
     """
-    Optionally cleans up the environment.
-    
-    Parameters:
-        clean (bool): If True, initiates the cleanup process. Default is False.
-        keep_volumes (bool): Specifies if volumes should be kept.
-        keep_secrets (bool): Specifies if secret files should be kept.
+    Cleans up the environment by delegating to the cleanup.py script.
     """
     
     if clean:
@@ -328,20 +255,11 @@ def clean_environment(clean=False, keep_volumes=None, keep_secrets=None):
             print("Error during cleanup:", e)
             sys.exit(1)
 
-
 def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None):
     
     """
-    Creates secret files for Avalanche CMS, including hash files for
-    user secrets. Supports using a common password, auto-generation, or 
-    interactive prompting for secrets. Also generates a 
-    .pgpass file for PostgreSQL connections.
-
-    Parameters:
-        keep_secrets (bool): If True, skips secret creation.
-        auto (bool): If True, automatically generates secrets without prompting.
-        password (str): A common password to use for all secrets (for debugging).
-        salt_base (str): A base string used to salt hashes (for debugging).
+    Creates secrets and hash files, supporting auto-generation, common password,
+    and interactive prompting. Optionally skips creation.
     """
     
     if password is not None and password.strip():
@@ -394,10 +312,7 @@ def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None)
 def update_docker_images(image_pull=False):
     
     """
-    Updates Docker images if opted in.
-
-    Parameters:
-        image_pull (bool): If true, pull is performed.
+    Pulls latest Docker images if opted in.
     """
     
     if image_pull:
@@ -416,8 +331,10 @@ def update_docker_images(image_pull=False):
 def main(auto=False, password=None, clean=False, keep_volumes=None, keep_secrets=None, salt_base=None, image_pull=False):
     
     """
-    Main Avalanche CMS setup function.
-    """    
+    Main setup function for Avalanche CMS. Configures environment based on
+    provided arguments for automation, cleaning, volume and secret retention,
+    salt base customization, and Docker image updates.
+    """
     
     print("Setting up Avalanche CMS Local Development Environment.")
 

@@ -1,16 +1,12 @@
 """
-Avalanche CMS Local Cleanup Script
+Cleans the Avalanche CMS local dev environment.
 
-Cleans the local development environment for Avalanche CMS.
+Shuts down and cleans the local Avalanche CMS dev environment. Supports
+optional retention of volumes and secrets.
 
-Features:
-- Shuts down Docker compose stack (containers, networks)
-- Removes specific Avalanche CMS volumes
-- Optional: Keeps volumes and secrets based on flags
-
-Command Line Options:
-- -kv, --keep-volumes: Retains Docker volumes.
-- -ks, --keep-secrets: Retains secrets and hashes in '.secrets'.
+Options:
+- -kv, --keep-volumes: Retain Docker volumes.
+- -ks, --keep-secrets: Retain '.secrets'.
 """
 
 import argparse
@@ -24,16 +20,11 @@ from utils.output import print
 
 @require_docker_running
 def get_docker_volumes():
-    
+
     """
     Fetches Docker volume names.
 
-    Uses 'docker volume ls -q' for getting volume names. On success,
-    returns a list of names. On failure (e.g., Docker not running), prints an
-    error and returns an empty list.
-
-    Returns:
-        list: Docker volume names or empty list on failure.
+    Returns list of names or empty list on failure.
     """
 
     result = subprocess.run(["docker", "volume", "ls", "-q"], capture_output=True, text=True)
@@ -51,11 +42,8 @@ def remove_volumes(volumes):
     """
     Removes specified Docker volumes.
 
-    Iterates over a list of volume names, removing each one.
-    Prints the status of each removal operation.
-
     Args:
-        volumes (list): List of volume names to remove.
+        volumes (list): Volumes to remove.
     """
 
     for volume in volumes:
@@ -71,10 +59,6 @@ def purge_avalanchecms_volumes():
     
     """
     Purges all Avalanche CMS Docker volumes.
-
-    Retrieves all Docker volumes and filters volumes matching
-    'avalanchecms_.*' regex. If matching volumes are found, they are removed.
-    If no volumes match, prints a message and exits.
     """
     
     print("Removing Docker volumes.")
@@ -97,10 +81,10 @@ def purge_avalanchecms_volumes():
 def purge_docker_environment(keep_volumes=False):
     
     """
-    Stops/removes Avalanche CMS Docker containers and purges volumes.
+    Stops/removes containers and purges volumes unless keep_volumes is True.
 
     Args:
-        keep_volumes (bool): If True, skips volume purging. Default is False.
+        keep_volumes (bool): Skip volume purge if True.
     """
     
     try:
@@ -133,7 +117,7 @@ def purge_docker_environment(keep_volumes=False):
 def remove_secret_folder():
     
     """
-    Removes the '.secrets' directory from the root if it exists.
+    Removes the '.secrets' directory if it exists.
     """
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -149,10 +133,10 @@ def remove_secret_folder():
 def purge_secrets(keep_secrets=False):
     
     """
-    Purges Avalanche CMS secrets, skippable.
-    
+    Purges secrets unless keep_secrets is True.
+
     Args:
-        keep_secrets (bool): If True, skips the purge operation. Default is False.
+        keep_secrets (bool): Skip purge if True.
     """
 
     if keep_secrets:
@@ -166,13 +150,11 @@ def purge_secrets(keep_secrets=False):
 def main(keep_volumes=False, keep_secrets=False):
     
     """
-    Main cleanup function.
-
-    Cleans the Docker environment and purges Avalanche CMS secrets.
+    Main cleanup function, optionally keeping volumes and secrets.
 
     Args:
-        keep_volumes (bool): If True, skips volume purging. Default is False.
-        keep_secrets (bool): If True, skips secret purging. Default is False.
+        keep_volumes (bool): Skip volume purge if True.
+        keep_secrets (bool): Skip secret purge if True.
     """
     
     print("Cleaning up local development environment.")
@@ -184,7 +166,7 @@ def main(keep_volumes=False, keep_secrets=False):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Avalanche CMS Local Cleanup Script.")
+    parser = argparse.ArgumentParser(description="Avalanche CMS Cleanup.")
     parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Doesnt remove Docker volumes')
     parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Doesnt remove secrets and hashes in /.secrets')
     args = parser.parse_args()
