@@ -79,6 +79,10 @@ Starts the local Docker stack with options for cleaning data, updating images, a
 
 Stops the Docker containers safely. Use this script to gracefully shut down the stack, especially useful in detached mode.
 
+## Configuration Files
+
+The `./config` subfolder contains configuration files for the development environment, specifically `credentials.json` (credentials for the environment's components) and `docker_images.json` (used Docker images throughout the stack).
+
 ## Additional Notes
 
 - Running `start.py` in the terminal will attach the stack to your current terminal session. Use CTRL+C to stop the stack or `-d` for detached mode.
