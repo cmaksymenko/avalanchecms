@@ -1,33 +1,26 @@
 # Avalanche CMS
 
-## About
+## Overview
 
-Avalanche CMS is a specialized **content management system** designed for **curating and enhancing AI-generated artwork** in a streamlined way. 
+Avalanche CMS is a specialized **CMS** for **managing, safeguarding and improving AI-generated art** efficiently.
 
-It provides a centralized platform to capture and organize the non-linear evolution of prompts, associated generated images, and creative decisions. It is useful for anyone engaged in visual exploration and digital art creation within the generative AI space.
+It offers a unified platform for tracking the progression of prompts, images, and creative choices in generative AI art, ideal for visual exploration and digital art creators. Integrated with AI-driven screening and automatic publication control, it safeguards creative processes, ensuring every generative AI image meets legal and community standards.
 
-## Project Status
-
-Avalanche CMS is in its early development stages. The focus is currently on establishing the basic components and technologies essential for the project's foundation. Below is an outline of planned future developments - updates and advancements will be shared as the project evolves.
+**The project is in its initial phase**, concentrating on local deployment, components, and tech. Progress updates will be shared over time.
 
 ## Planned Features
 
-### Image Echoing
-
-This workflow will enable the tracking of all prompt refinement steps involved in replicating original pictures using generative AI - serving as the foundation for new, original artworks. See [image-echoing.md](/docs/image-echoing.md) for further details.
-
-- Includes the possibility to upload and organize source material.
-- Provides an interactive graph interface, which displays the evolution of prompts and their generated images in a 2D space view for easy exploration and experimentation. Possibility to add comments, use custom tags for filtering, and outcome rating.
-- Integration of AI tools to support the creative process and decision making. May include integration with Midjourney's Discord interface.
+- Upload, manage and reference source images, prompts and used AI models.
+- Track prompt refinements for generating new, original AI-generated images.
+- Explore prompt and generated image evolutions with a filterable 2D interactive graph.
+- Integrate with AI tools to feed forward generations and creative decisions.
+- Create content origin reports for copyright compliance and risk assessment.
+- AI-driven screening and publication block for infringement or standards violations.
 
 ## Application Server
 
-- An application server will be built using Java 21 and Spring Boot 3.3, utilizing Maven 3.9 for building.
-- The server's codebase can be found in the `/server` directory of the repository.
-- For more information on setup and build procedures, refer to the [server README.md](/server/README.md) located in the `/server` directory.
+Server code is in the `/server` directory, tech stack: Java 21, Spring Boot 3.3, and Maven 3.9. See [server README.md](/server/README.md).
 
-## Local Development Environment
+## Development Setup
 
-- The local development stack includes a PostgreSQL database, Keycloak for identity and access management, and pgAdmin for database administration.
-- This stack can be deployed locally using Docker Compose.
-- Python 3 is required for the initial setup. Detailed instructions and additional prerequisites are available in the [/environments/local/README.md](/environments/local/README.md).
+Local stack includes PostgreSQL, Keycloak, and pgAdmin, deployable with Docker Compose. Requires Python 3 for setup; details at [/environments/local/README.md](https://chat.openai.com/environments/local/README.md).
