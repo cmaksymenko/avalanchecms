@@ -59,3 +59,14 @@ Service access and passwords:
 | **pgAdmin**       | http://host.docker.internal:5050/ | `adminuser`        | `.secrets/avalanchecms-adminuser-secret.env`|
 | **Keycloak Admin UI** | http://host.docker.internal:8080/ | `keycloakadminuser` | `.secrets/keycloak-admin-user-secret.env`   |
 
+## Detailed Description
+
+### Architecture
+
+The local stack, designed for Windows 11 with Docker Desktop, uses Docker Compose with three infrastructure components:
+
+- **PostgreSQL**: Relational database for Avalanche CMS and Keycloak. Uses a Docker volume for storage.
+- **pgAdmin**: Web tool for PostgreSQL management, authenticated by Keycloak. Uses a Docker volume for storage.
+- **Keycloak**: Manages user identities and authorization. Uses PostgreSQL as storage.
+
+<img src="../../docs/avalanchecms_local.drawio.png" style="zoom:50%;" />

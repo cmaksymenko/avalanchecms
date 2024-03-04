@@ -2,9 +2,9 @@
 
 ## Overview
 
-Avalanche CMS is a specialized **CMS** for **managing, safeguarding and improving AI-generated art** efficiently.
+Avalanche CMS is a specialized **CMS** for **managing, safeguarding and publishing AI-generated art** efficiently.
 
-It offers a unified platform for tracking the progression of prompts, images, and creative choices in generative AI art, ideal for visual exploration and digital art creators. Integrated with AI-driven screening and automatic publication control, it safeguards creative processes, ensuring every generative AI image meets legal and community standards.
+It offers a unified platform for digital art creators to [mine image concepts](/docs/concept-mining.md), track progression of generative art prompts, images and creative choices, meet legal and community standards, and publish to the public.
 
 **The project is in its initial phase**, concentrating on local deployment, components, and tech. Progress updates will be shared over time.
 
@@ -13,9 +13,9 @@ It offers a unified platform for tracking the progression of prompts, images, an
 - Upload, manage and reference source images, prompts and used AI models.
 - Track prompt refinements for generating new, original AI-generated images.
 - Explore prompt and generated image evolutions with a filterable 2D interactive graph.
-- Integrate with AI tools to feed forward generations and creative decisions.
-- Create content origin reports for copyright compliance and risk assessment.
-- AI-driven screening and publication block for infringement or standards violations.
+- Integrate with AI tools to feed forward generations and creative decisions (planned: Midjourney)
+- Create content origin reports for copyright compliance and community standards risk assessment.
+- AI-driven content screening and automatic publication block for infringement or community standards violations.
 
 ## Application Server
 
