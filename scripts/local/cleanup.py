@@ -1,124 +1,177 @@
-# Avalanche CMS Local Stack cleanup script
-#
-# This script cleans up the local development environment for Avalanche CMS. It does the following:
-# - It shuts down the Docker compose stack with docker compose down, removing containers and networks
-# - It removes Avalanche CMS volumes specifically through regex matching (avalanchecms_.*), skippable
+"""
+Cleans the Avalanche CMS local dev environment.
+
+Shuts down and cleans the local Avalanche CMS dev environment. Supports
+optional retention of volumes and secrets.
+
+Options:
+- -kv, --keep-volumes: Retain Docker volumes.
+- -ks, --keep-secrets: Retain '.secrets'.
+"""
 
 import argparse
-import builtins
 import os
 import re
 import shutil
 import subprocess
+import sys
+from utils.decorators import require_docker_running
+from utils.output import print
 
-# Redefine the print function to always flush by default
-def print(*args, **kwargs):
-    kwargs.setdefault('flush', True)
-    return builtins.print(*args, **kwargs)
-
-
-# Get all Docker volumes, returning them as a list
-# On failure, an empty list is returned
+@require_docker_running
 def get_docker_volumes():
+
+    """
+    Fetches Docker volume names.
+
+    Returns list of names or empty list on failure.
+    """
 
     result = subprocess.run(["docker", "volume", "ls", "-q"], capture_output=True, text=True)
 
     if result.returncode != 0:
         print("Error listing Docker volumes")
-        return []
+        return []  # return empty on failure
 
-    volumes = result.stdout.splitlines()
-    return volumes
+    # return list of volume names
+    return result.stdout.splitlines()
 
-# Removes each Docker volume of a list of volume names
+@require_docker_running
 def remove_volumes(volumes):
+    
+    """
+    Removes specified Docker volumes.
+
+    Args:
+        volumes (list): Volumes to remove.
+    """
+
     for volume in volumes:
+        
         print(f"Removing volume {volume}...")
+        
+        # remove volume
         subprocess.run(["docker", "volume", "rm", volume], check=True)
+        
         print(f"Removed volume {volume}")
 
-# Retrieves all Avalanche CMS Docker volumes and removes them
 def purge_avalanchecms_volumes():
+    
+    """
+    Purges all Avalanche CMS Docker volumes.
+    """
+    
+    print("Removing Docker volumes.")
 
-    volumes = get_docker_volumes()
+    volumes = get_docker_volumes() # Get all Docker volumes
+    pattern = re.compile('avalanchecms_.*') # regex
 
-    pattern_string = 'avalanchecms_.*'
-    pattern = re.compile(pattern_string)
-
+    # filter volumes matching the regex
     filtered_volumes = [volume for volume in volumes if pattern.match(volume)]
 
     if not filtered_volumes:
-        print(f"No volumes match the pattern: {pattern_string}")
+        print("No volumes match the pattern: avalanchecms_.*")
         return
 
     remove_volumes(filtered_volumes)
+    
+    print("Docker volumes removed.")
 
-# Stops and removes Avalanche CMS Docker containers, and purges volumes, too (skippable)
-def purge_docker_environment(no_purge_volumes=False):
+@require_docker_running
+def purge_docker_environment(keep_volumes=False):
+    
+    """
+    Stops/removes containers and purges volumes unless keep_volumes is True.
 
+    Args:
+        keep_volumes (bool): Skip volume purge if True.
+    """
+    
     try:
-
+        
+        print("Stopping/removing Docker containers and networks.")
+        
         script_dir = os.path.dirname(os.path.abspath(__file__))
         env_dir = os.path.join(script_dir, '../../environments/local')
         original_dir = os.getcwd()
-        
-        # Change directory to where the docker-compose file is located
-        os.chdir(env_dir)
 
-        # Stop and remove all containers and networks
+        os.chdir(env_dir) # change to docker compose dir
+
+        # stop/remove containers and networks
         subprocess.run(["docker", "compose", "down"], check=True)
+        
+        print("Docker containers and networks stopped/removed.")
 
-        if no_purge_volumes:
+        if keep_volumes:
             print("Volume purge skipped.")
         else:
-            purge_avalanchecms_volumes()
-
-        print("Docker environment purged successfully.")
+            purge_avalanchecms_volumes()  # purge volumes by default
 
     except subprocess.CalledProcessError as e:
         print(f"Failed to purge Docker environment: {e}")
-
-    except FileNotFoundError:
-        print("Docker Compose file not found. Are you in the correct directory?")
+        sys.exit(1)
 
     finally:
+        os.chdir(original_dir) # return to original dir
 
-        # Change back to the original directory
-        os.chdir(original_dir)
-
-# Removes '.secrets' folder in root directory, if it exists 
 def remove_secret_folder():
+    
+    """
+    Removes the '.secrets' directory if it exists.
+    """
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     secrets_dir = os.path.join(script_dir, '../../.secrets')
    
     try:
-        shutil.rmtree(secrets_dir)
-        print("/.secret folder removed successfully.")
+        shutil.rmtree(secrets_dir) # remove the .secrets dir
+        print("/.secrets folder removed successfully.")
     except FileNotFoundError:
-        print("/.secret folder does not exist or has already been removed.")
+        # .secrets dir does not exist
+        print("/.secrets folder does not exist or has already been removed.")
 
-# Purges Avalanche CMS secrets (skippable)
-def purge_secrets(no_purge_secrets=False):
+def purge_secrets(keep_secrets=False):
+    
+    """
+    Purges secrets unless keep_secrets is True.
 
-    if no_purge_secrets:
-        print("Secret purge skipped.")
+    Args:
+        keep_secrets (bool): Skip purge if True.
+    """
+
+    if keep_secrets:
+        print("Secret removal skipped.")
     else:
-        remove_secret_folder()
-        print("Secrets purged successfully.")
+        print("Removing secrets.")
+        remove_secret_folder()  # remove .secrets directory
+        print("Secrets removed.")
 
-# Main
-def main():
 
-    parser = argparse.ArgumentParser(description="Avalanche CMS local development cleanup script.")
-    parser.add_argument('--no-purge-volumes', action='store_true', help='Do not purge Avalanche CMS Docker volumes', default=False)
-    parser.add_argument('--no-purge-secrets', action='store_true', help='Do not remove the local secrets in /.secrets', default=False)
-    args = parser.parse_args()
+def main(keep_volumes=False, keep_secrets=False):
+    
+    """
+    Main cleanup function, optionally keeping volumes and secrets.
 
-    purge_docker_environment(args.no_purge_volumes)
-    purge_secrets(args.no_purge_secrets)
+    Args:
+        keep_volumes (bool): Skip volume purge if True.
+        keep_secrets (bool): Skip secret purge if True.
+    """
+    
+    print("Cleaning up local development environment.")
+
+    purge_docker_environment(keep_volumes)
+    purge_secrets(keep_secrets)
 
     print("Local development environment cleanup is complete.")
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Avalanche CMS Cleanup.")
+    parser.add_argument('-kv', '--keep-volumes', action='store_true', help='Keeps Docker volumes')
+    parser.add_argument('-ks', '--keep-secrets', action='store_true', help='Keeps secrets in /.secrets')
+    args = parser.parse_args()
+    return args
+
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(keep_volumes=args.keep_volumes, keep_secrets=args.keep_secrets)

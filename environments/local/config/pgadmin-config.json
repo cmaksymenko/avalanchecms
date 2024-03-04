@@ -1,0 +1,16 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Local PostgreSQL DB (Dev)",
+      "Group": "Avalanche CMS",
+      "Port": 5432,
+      "Username": "postgresadminuser",
+      "SharedUsername": "postgresadminuser",
+      "Host": "postgres",
+      "SSLMode": "prefer",
+      "MaintenanceDB": "admin",
+      "Shared": true,
+      "PassFile": "/tmp/passfile"
+    }
+  }
+}

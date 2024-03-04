@@ -1,0 +1,130 @@
+{
+  "realm": "avalanchecms",
+  "enabled": true,
+  "displayName": "Avalanche CMS",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin"
+      },
+      {
+        "name": "user"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "Admins",
+      "realmRoles": [
+        "admin"
+      ]
+    },
+    {
+      "name": "Users",
+      "realmRoles": [
+        "user"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "adminuser",
+      "email": "adminuser@avalanchecms.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Admins"
+      ]
+    },
+    {
+      "username": "appuser1",
+      "email": "appuser1@avalanchecms.com",
+      "firstName": "App",
+      "lastName": "User 1",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Users"
+      ]
+    },
+    {
+      "username": "appuser2",
+      "email": "appuser2@avalanchecms.com",
+      "firstName": "App",
+      "lastName": "User 2",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Users"
+      ]
+    },
+    {
+      "username": "combineduser",
+      "email": "combineduser@avalanchecms.com",
+      "firstName": "Combined",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": [
+        "/Admins",
+        "/Users"
+      ]
+    },
+    {
+      "username": "nogroupuser",
+      "email": "nogroupuser@avalanchecms.com",
+      "firstName": "No Group",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "totp": false,
+      "groups": []
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "pgadmin",
+      "baseUrl": "/",
+      "name": "pgAdmin",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://host.docker.internal:5050/oauth2/authorize"
+      ],
+      "webOrigins": [
+        "http://host.docker.internal:5050"
+      ],
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": ["web-origins","profile","email"],
+      "protocolMappers": [
+        {
+          "name": "pgAdmin User Role ID Token Mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "multivalued": "true",
+            "userinfo.token.claim": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ]
+}
