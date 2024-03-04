@@ -69,4 +69,4 @@ The local stack, designed for Windows 11 with Docker Desktop, uses Docker Compos
 - **pgAdmin**: Web tool for PostgreSQL management, authenticated by Keycloak. Uses a Docker volume for storage.
 - **Keycloak**: Manages user identities and authorization. Uses PostgreSQL as storage.
 
-<img src="../../docs/avalanchecms_local.drawio.png" style="zoom:50%;" />
+<img src="../../docs/avalanchecms_local.drawio.png" style="zoom:100%;" />
