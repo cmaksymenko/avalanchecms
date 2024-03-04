@@ -23,4 +23,4 @@ Server code is in the `/server` directory, tech stack: Java 21, Spring Boot 3.3,
 
 ## Development Setup
 
-Local stack includes PostgreSQL, Keycloak, and pgAdmin, deployable with Docker Compose. Requires Python 3 for setup; details at [/environments/local/README.md](https://chat.openai.com/environments/local/README.md).
+Local stack includes PostgreSQL, Keycloak, and pgAdmin, deployable with Docker Compose. Requires Python 3 for setup; details at [/environments/local/README.md](/environments/local/README.md).
