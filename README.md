@@ -2,7 +2,7 @@
 
 ## Overview
 
-Avalanche is a specialized image-based **CMS** for **refining, safeguarding and publishing AI-generated art** efficiently.
+Avalanche is an image-based **CMS** for **refining, safeguarding and publishing AI-generated art**.
 
 It offers a unified platform for digital art creators to [mine image concepts](/docs/concept-mining.md), track progression of generative art prompts, images and creative choices, meet legal and community standards, and publish to the public.
 
