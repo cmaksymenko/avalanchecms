@@ -13,6 +13,7 @@ set -eou pipefail
 #
 # Returns:
 #   Secret value, or exits with code 1 on failure.
+#
 read_secret_from_file() {
 
     local file_path="$1"
@@ -64,12 +65,62 @@ create_db_and_user() {
 EOSQL
 }
 
+# Normalizes strings: lowercase, spaces to underscores
+#
+# Returns:
+#   Normalized input string
+#
+normalize_input() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '_'
+}
+
+# Generates DB username from DB type, DB name, app name
+#
+# Arguments:
+#   $1 - Database name (required)
+#   $2 - Application name (optional, default: "client")
+#   $3 - Database type (optional, default: "postgres")
+#
+# Returns:
+#   DB username
+#
+generate_db_username() {
+
+    local db_name="$1"
+    local app_name="${2:-client}"
+    local db_type="${3:-postgres}"
+
+    echo "$(normalize_input "$db_type")_$(normalize_input "$db_name")_$(normalize_input "$app_name")"
+}
+
 # Main
 main() {
 
-    # Creates databases and users for 'avalanchecms' and 'keycloak'.
-    create_db_and_user "avalanchecmsdb" "postgresavalanchecmsdbuser" "/run/secrets/avalanchecms/postgres-avalanchecms-db-user-secret.env"
-    create_db_and_user "keycloakdb" "postgreskeycloakdbuser" "/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env"
+    secrets_dir="/run/secrets/avalanchecms"
+    files_found=false
+
+    # Create DBs and users for postgres-<dbname>-db-user-secret.env files
+    for file in "$secrets_dir"/postgres-*-db-user-secret.env; do
+
+        if [ -e "$file" ]; then
+            files_found=true
+
+            db_name=$(echo "$file" | sed -n 's|.*/postgres-\(.*\)-db-user-secret.env|\1|p')
+            if [ -n "$db_name" ]; then
+
+                create_db_and_user "${db_name}" "$(generate_db_username "${db_name}")" "${file}"
+
+            else
+                echo "Database name extraction failed: $file"
+                return 1
+            fi
+        fi
+    done
+
+    # Check for no files post-loop
+    if [ "$files_found" = false ]; then
+        echo "No matches in $secrets_dir."
+    fi
 }
 
 main "$@"

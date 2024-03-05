@@ -148,7 +148,7 @@ def hash_secret(secret, salt_length=16, iterations=27500, salt_base=None):
     except Exception as e:
         raise RuntimeError(f"Error during secret hashing: {e}")
 
-def write_pgpass_file(folder, hostname, port=5432, database="*", tuples=None):
+def write_pgpass_file(folder, hostname, port=5432, triplets=None):
     
     """
     Writes .pgpass for PostgreSQL connections in specified folder.
@@ -156,22 +156,22 @@ def write_pgpass_file(folder, hostname, port=5432, database="*", tuples=None):
     Args:
         folder (str): Target directory.
         hostname (str), port (int), database (str): Connection details.
-        tuples (list of tuple): Username and password pairs.
+        triplets (list of triplets): Database, Username, Password triplets.
 
     Returns path to .pgpass or raises ValueError on missing info.
     """
 
     # validate required parameters
-    if not all([hostname, tuples]):
-        raise ValueError("Hostname and tuples cannot be None or empty.")
+    if not all([hostname, triplets]):
+        raise ValueError("Hostname and triplets cannot be None or empty.")
 
     pgpass_file_path = os.path.join(folder, '.pgpass')
 
     # create the file
     with open(pgpass_file_path, 'w', newline='\n') as file:
-        for username, password in tuples:
+        for database, username, password in triplets:
             
-            # format connection string for each user-password pair
+            # format connection string for each database-username-password triplet
             connection_string = f"{hostname}:{port}:{database}:{username}:{password}\n"
             
             file.write(connection_string)
@@ -298,15 +298,22 @@ def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None)
             if generate_hash:
                 create_hash_file(secret_file_hash, secret_value, salt_base)
         
-        # generate .pgpass file.
-        pgpass_credentials = [(entry["username"], entry["secret_value"]) for entry in credentials if entry.get("in_pgpass_file", False)]
-        if pgpass_credentials:
-            pgpass_file_path = write_pgpass_file(secrets_path, "postgres", 5432, "*", pgpass_credentials)
-            print(f"pgAdmin Password File created at {pgpass_file_path}, number of credentials: {len(pgpass_credentials)}")
+        # generate .pgpass file
+        triplets = []
+        for entry in credentials:
+            if entry.get("in_pgpass_file", False):
+                database = entry.get("database", "*") if entry.get("database", "").strip() else "*"
+                triplets.append((database, entry["username"], entry["secret_value"]))
+
+        if triplets:          
+            pgpass_file_path = write_pgpass_file(secrets_path, "postgres", 5432, triplets)
+            print(f".pgpass created: {pgpass_file_path}, credentials: {len(triplets)}")
+
         else:
-            print("No secrets apply for pgAdmin Password File, skipping.")
+            print("No applicable secrets, skipping .pgpass creation.")
+            
     else:
-        print("Skipping secret creation due to keeping secrets on cleanup.")
+        print("Skipping secret creation for cleanup.")
 
 def update_docker_images(image_pull=False):
     

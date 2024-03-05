@@ -33,6 +33,7 @@ services:
       - ./../../.secrets/postgres-admin-user-secret.env:/run/secrets/avalanchecms/postgres-admin-user-secret.env:ro
       - ./../../.secrets/postgres-avalanchecms-db-user-secret.env:/run/secrets/avalanchecms/postgres-avalanchecms-db-user-secret.env:ro
       - ./../../.secrets/postgres-keycloak-db-user-secret.env:/run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env:ro
+      - ./../../.secrets/postgres-pgadmin-db-user-secret.env:/run/secrets/avalanchecms/postgres-pgadmin-db-user-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
     command: ["postgres"]
 
@@ -49,7 +50,11 @@ services:
       - local
     environment:
       PGADMIN_DEFAULT_EMAIL: pgadminuser@avalanchecms.com # admin user
-      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-user-secret.env
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/avalanchecms/pgadmin-user-secret.env      
+      PGADMIN_DB_URL_HOST: postgres
+      PGADMIN_DB_URL_PORT: 5432
+      PGADMIN_DB_URL_DATABASE: pgadmin
+      PGADMIN_DB_URL_USERNAME: postgres_pgadmin_client
       PGADMIN_SERVER_JSON_FILE: /etc/avalanchecms/pgadmin-config.json
       PGADMIN_OAUTH2_CLIENT_SECRET_FILE: /run/secrets/avalanchecms/pgadmin-keycloak-client-secret.env
       AV_APP_NAME: pgAdmin
@@ -57,13 +62,13 @@ services:
       AV_LOAD_SECRET_ENVS: true
       AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/pgadmin-config.sh
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
       - ./scripts/entrypoint.sh:/usr/local/bin/avalanchecms/entrypoint.sh:ro
       - ./scripts/pgadmin-config.sh:/usr/local/bin/avalanchecms/pgadmin-config.sh:ro
       - ./config/config_local.py:/pgadmin4/config_local.py:ro
       - ./config/pgadmin-config.json:/etc/avalanchecms/pgadmin-config.json:ro
       - ./../../.secrets/.pgpass:/run/secrets/avalanchecms/.pgpass:ro
       - ./../../.secrets/pgadmin-user-secret.env:/run/secrets/avalanchecms/pgadmin-user-secret.env:ro
+      - ./../../.secrets/postgres-pgadmin-db-user-secret.env:/run/secrets/avalanchecms/postgres-pgadmin-db-user-secret.env:ro
       - ./../../.secrets/pgadmin-keycloak-client-secret.env:/run/secrets/avalanchecms/pgadmin-keycloak-client-secret.env:ro
     entrypoint: /usr/local/bin/avalanchecms/entrypoint.sh
 
@@ -86,11 +91,11 @@ services:
       KEYCLOAK_ADMIN: keycloakadminuser # admin user
       KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/avalanchecms/keycloak-admin-user-secret.env
       KC_DB: postgres
-      KC_DB_USERNAME: postgreskeycloakdbuser
+      KC_DB_USERNAME: postgres_keycloak_client
       KC_DB_PASSWORD_FILE: /run/secrets/avalanchecms/postgres-keycloak-db-user-secret.env
       KC_DB_URL_HOST: postgres
       KC_DB_URL_PORT: 5432
-      KC_DB_URL_DATABASE: keycloakdb
+      KC_DB_URL_DATABASE: keycloak
       AV_APP_NAME: Keycloak
       AV_LOAD_SECRET_ENVS: true
       AV_CUSTOM_SCRIPT: /usr/local/bin/avalanchecms/keycloak-config.sh
@@ -108,5 +113,4 @@ services:
   
 # Storage Volumes
 volumes:
-  pgadmin-data:
   postgres-data:
