@@ -308,7 +308,6 @@ def create_secrets(keep_secrets=None, auto=False, password=None, salt_base=None)
     else:
         print("Skipping secret creation due to keeping secrets on cleanup.")
 
-@require_docker_running
 def update_docker_images(image_pull=False):
     
     """
