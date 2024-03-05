@@ -66,7 +66,7 @@ Service access and passwords:
 The local stack, designed for Windows 11 with Docker Desktop, uses Docker Compose with three infrastructure components:
 
 - **PostgreSQL**: Relational database for Avalanche CMS and Keycloak. Uses a Docker volume for storage.
-- **pgAdmin**: Web tool for PostgreSQL management, authenticated by Keycloak. Uses a Docker volume for storage.
+- **pgAdmin**: Web tool for PostgreSQL management, authenticated by Keycloak. Uses PostgreSQL for storage.
 - **Keycloak**: Manages user identities and authorization. Uses PostgreSQL as storage.
 
 <img src="../../docs/avalanchecms_local.drawio.png" style="zoom:100%;" />
