@@ -1,10 +1,39 @@
 import os
+import sys
 import urllib.parse
 
 SERVER_MODE = True
+AUTO_DISCOVER_SERVERS = False
+
+def build_postgresql_uri():
+    
+    env_vars = {
+        "PGADMIN_DB_URL_USERNAME": True,  # required
+        "PGADMIN_DB_URL_HOST": True,      # required
+        "PGADMIN_DB_URL_DATABASE": True,  # required
+        "PGADMIN_DB_URL_PORT": False      # not required
+    }    
+    
+    missing_vars = [var for var, required in env_vars.items() if required and os.getenv(var) is None]
+    vars_set = [var for var in env_vars if os.getenv(var) is not None]    
+    
+    if not vars_set:
+        # all variables are missing; proceed with an empty URI
+        return ""
+    elif missing_vars:
+        print(f"Missing required environment variables: {', '.join(missing_vars)}", file=sys.stderr)
+        sys.exit(1)
+        
+    username = os.getenv('PGADMIN_DB_URL_USERNAME')
+    host = os.getenv('PGADMIN_DB_URL_HOST')
+    port = os.getenv('PGADMIN_DB_URL_PORT', '5432')
+    dbname = os.getenv('PGADMIN_DB_URL_DATABASE')
+
+    return f"postgresql://{username}@{host}:{port}/{dbname}"
+
+CONFIG_DATABASE_URI = build_postgresql_uri()
 
 AUTHENTICATION_SOURCES = ['oauth2']
-
 # Enable internal auth if PGADMIN_ENABLE_INTERNAL_AUTH is set
 if os.getenv('PGADMIN_ENABLE_INTERNAL_AUTH', '').lower() in ['true', '1', 'on', 'yes', 'y', 'enabled']:
     AUTHENTICATION_SOURCES.append('internal')
@@ -13,7 +42,6 @@ MFA_ENABLED = False
 OAUTH2_AUTO_CREATE_USER = True
 MASTER_PASSWORD_REQUIRED = False
 MAX_LOGIN_ATTEMPTS = 3
-AUTO_DISCOVER_SERVERS = False
 
 USER_INACTIVITY_TIMEOUT = 900
 OVERRIDE_USER_INACTIVITY_TIMEOUT = True
