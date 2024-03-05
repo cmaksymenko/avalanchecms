@@ -2,7 +2,7 @@
 
 ## Overview
 
-<img align="right" src="./assets/logos/avalanchecms-logo-circle-small.png">
+<img align="right" src="./assets/logos/avalanchecms-logo-circle.svg" width="128">
 
 Avalanche is an image-based **CMS** for **refining, safeguarding and publishing AI-generated art**.
 
