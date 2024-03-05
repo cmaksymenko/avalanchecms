@@ -15,36 +15,48 @@ The scripts included are:
 
 Before using these scripts, ensure Docker is installed and running on your system. The scripts interact directly with Docker to manage the Avalanche CMS environment.
 
-## Initial Setup
+## Quickstart
+
+To launch the stack for trial or demo:
+
+```bash
+python start.py -c
+```
+
+This initiates a **fresh setup with auto-configuration**. Caution: Running this command again will **erase** all existing data. For subsequent starts with existing data and credentials, exclude `-c`.
+
+## Advanced Usage
+
+### Initial Setup
 
 1. **Setup Environment**: Run `setup.py` to initialize secrets and other necessary configurations. For an interactive setup in which secrets are typed in, execute:
 
-```
+```bash
 python setup.py
 ```
 
 ​	Automate secret generation with:
-```
+```bash
 python setup.py -a
 ```
 
 2. **Start the Stack**: To start the Avalanche CMS stack, run `start.py`. For a standard start:
 
-```
+```bash
 python start.py
 ```
 
 ​	To start in detached mode (background), add the `-d` option:
-```
+```bash
 python start.py -d
 ```
 
-## Regular Use
+### Regular Use
 
 - **Updating Docker Images**: Before setting up or starting the stack, update Docker images with the `-ip` option in `setup.py` or `start.py`.
 - **Clean Start**: For development, especially when working on stack setup or DevOps, automate a clean environment initialization and start with:
 
-```
+```bash
 python start.py -c
 ```
 
