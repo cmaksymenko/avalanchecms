@@ -2,6 +2,21 @@
 
 The Avalanche CLI manages Avalanche CMS resources via a command set.
 
+## Installation
+
+To install the Avalanche CLI, navigate to `/cli` and execute:
+
+```shell
+./install_cli.sh
+```
+The script installs the CLI in editable mode, checking for Python and pip dependencies. The installer builds the CLI binary `av` and puts it on the PATH.
+
+You can then invoke the CLI with `av`, for example:
+
+```shell
+av --help
+```
+
 ## Commands
 
 ### User Authentication
@@ -306,3 +321,21 @@ av collection update --id <id> [--user-id <id>] [--name <newName>]
   }
 }
 ```
+
+## Developer Guide
+
+### Making Changes
+
+Since the CLI is installed in editable mode, changes to the source code are automatically reflected when invoking `av`.
+
+After modifying the CLI source code, validate changes by running:
+
+```shell
+./run_tests.sh
+```
+
+This ensures the CLI operates as expected by running the test suite.
+
+### Adding Tests
+
+For new tests, use `pytest` patterns found in the `tests` directory (`test_*.py` or `*_test.py`). Focus on testing one command per test for clarity and consistency.

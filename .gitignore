@@ -23,6 +23,8 @@ Thumbs.db
 *.o
 *.pyc
 __pycache__
+*.egg-info
+.pytest_cache
 
 # Backup & Temp Files
 *~
