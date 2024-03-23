@@ -15,7 +15,7 @@ Initiate a user session by logging into the CMS.
 ```shell
 av login --user <email>
 ```
-- A password prompt appears securely after executing the command.
+- A password prompt is used to retrieve the secret.
 - If logged in, the user ID is passed to subsequent commands with --user-id, unless otherwise passed as argument.
 
 **Example Output**
@@ -192,7 +192,7 @@ av collection exists [--id <id>] [--name <name>] [--user-id <id>]
 ```json
 {
   "exists": true,
-  "count": 2,
+  "matches": 2,
   "message": "Multiple collections with the specified name exist."
 }
 ```
