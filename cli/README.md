@@ -28,10 +28,10 @@ Manages Avalanche CMS CLI user sessions.
 Initiate a user session by logging into the CMS.
 
 ```shell
-av login --user <email>
+av login
 ```
-- A password prompt is used to retrieve the secret.
-- If logged in, the user ID is passed to subsequent commands with --user-id, unless otherwise passed as argument.
+
+The CLI initiates an authorization code flow by opening your default browser to a sign-in page where you can log in with your account credentials.
 
 **Example Output**
 
@@ -51,8 +51,7 @@ av login --user <email>
 ```json
 {
   "error": {
-    "message": "Login failed.",
-    "email": "user@example.com"
+    "message": "Login failed."
   }
 }
 ```
