@@ -1,23 +1,35 @@
 #!/bin/sh
 set -e
 
-#!/bin/sh
-
 echo "Starting installation of Avalanche CLI..."
 
-if ! command -v python3 > /dev/null 2>&1; then
-    echo "Python could not be found. Please install Python."
-    exit 1
-fi
-
-if ! command -v pip3 > /dev/null 2>&1; then
-    echo "pip could not be found. Please install pip."
-    exit 1
-fi
-
-if pip3 install --editable . ; then
-    echo "Avalanche CLI has been installed successfully."
+# Ensure Python 3 is available; exit if not
+if command -v python3 > /dev/null 2>&1; then
+    PYTHON_CMD=python3
+elif command -v python > /dev/null 2>&1 && python --version 2>&1 | grep -q "Python 3"; then
+    PYTHON_CMD=python
 else
-    echo "Installation of Avalanche CLI failed."
+    echo "Python 3 could not be found. Please install Python 3."
+    exit 1
+fi
+
+# Select pip3 or pip; exit if missing
+if command -v pip3 > /dev/null 2>&1; then
+    PIP_CMD=pip3
+elif command -v pip > /dev/null 2>&1; then
+    PIP_CMD=pip
+else
+    echo "Pip could not be found. Please install pip."
+    exit 1
+fi
+
+echo "Using $PYTHON_CMD and $PIP_CMD"
+
+# Install 'av' in editable mode
+echo "Installing 'av' in editable mode for direct code updates..."
+if $PIP_CMD install --editable . ; then
+    echo "Avalanche CLI installed, use 'av --help'"
+else
+    echo "Installation of Avalanche CLI failed"
     exit 1
 fi
