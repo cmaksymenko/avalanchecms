@@ -55,11 +55,12 @@ def login():
     code_queue = queue.Queue()
     code_ready_event = threading.Event()  # Event to signal when the code is ready
     
-    client_id = 'avcli'
+    client_id = 'avalanchecli'
+    realm = 'avalanchecms'
     keycloak_url = 'http://host.docker.internal:8080'
     redirect_uri = 'http://localhost:8888/'
-    authorization_endpoint = f'{keycloak_url}/realms/avalanchecms/protocol/openid-connect/auth'
-    token_endpoint = f'{keycloak_url}/realms/avalanchecms/protocol/openid-connect/token'
+    authorization_endpoint = f'{keycloak_url}/realms/{realm}/protocol/openid-connect/auth'
+    token_endpoint = f'{keycloak_url}/realms/{realm}/protocol/openid-connect/token'
     
     code_verifier = generate_code_verifier()
     click.echo(f"code_verifier: {code_verifier}")

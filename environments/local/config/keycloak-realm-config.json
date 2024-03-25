@@ -93,17 +93,28 @@
   ],
   "clients": [
     {
+      "clientId": "avalanchecli",
+      "name": "Avalanche CLI",
+      "enabled": true,
+      "alwaysDisplayInConsole": true,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": ["http://localhost:8888/*"],
+      "webOrigins": ["http://localhost:8888/*"],
+      "standardFlowEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": ["web-origins","profile","roles","email"]
+    },
+    {
       "clientId": "pgadmin",
       "baseUrl": "/",
       "name": "pgAdmin",
       "enabled": true,
+      "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "http://host.docker.internal:5050/oauth2/authorize"
-      ],
-      "webOrigins": [
-        "http://host.docker.internal:5050"
-      ],
+      "redirectUris": ["http://host.docker.internal:5050/oauth2/authorize"],
+      "webOrigins": ["http://host.docker.internal:5050"],
       "standardFlowEnabled": true,
       "serviceAccountsEnabled": true,
       "protocol": "openid-connect",
