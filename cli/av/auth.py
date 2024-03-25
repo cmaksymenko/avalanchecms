@@ -57,7 +57,7 @@ def login():
     
     client_id = 'avalanchecli'
     realm = 'avalanchecms'
-    keycloak_url = 'http://host.docker.internal:8080'
+    keycloak_url = 'http://localhost:8080'
     authorization_endpoint = f'{keycloak_url}/realms/{realm}/protocol/openid-connect/auth'
     token_endpoint = f'{keycloak_url}/realms/{realm}/protocol/openid-connect/token'
     
