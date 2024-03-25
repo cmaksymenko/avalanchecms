@@ -12,6 +12,7 @@ from urllib.parse import urlparse, parse_qs
 from uuid import uuid4
 import click
 import requests
+import socket
 
 @click.group()
 def auth_commands():
@@ -49,7 +50,6 @@ def decode_jwt_payload(token):
 @click.command()
 def login():
     
-    PORT = 8888
     authorization_code = None  # This will hold the authorization code
     
     code_queue = queue.Queue()
@@ -58,7 +58,6 @@ def login():
     client_id = 'avalanchecli'
     realm = 'avalanchecms'
     keycloak_url = 'http://host.docker.internal:8080'
-    redirect_uri = 'http://localhost:8888/'
     authorization_endpoint = f'{keycloak_url}/realms/{realm}/protocol/openid-connect/auth'
     token_endpoint = f'{keycloak_url}/realms/{realm}/protocol/openid-connect/token'
     
@@ -67,6 +66,12 @@ def login():
     
     code_challenge = generate_code_challenge(code_verifier)
     click.echo(f"code_challenge: {code_challenge}")
+    
+    server_port = 49200 # use a high static port for now
+    click.echo(f"Server port: {server_port}")
+    
+    redirect_uri = f"http://localhost:{server_port}/avalanchecli/oidc/pkce/callback"
+    click.echo(f"Redirect URI: {redirect_uri}")
     
     params = {
         'client_id': client_id,
@@ -83,34 +88,35 @@ def login():
     
     class RedirectHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
-            global authorization_code
-            # Parse the query parameters
-            query_components = parse_qs(urlparse(self.path).query)
-            code = query_components.get("code", None)
+            if urlparse(self.path).path == '/avalanchecli/oidc/pkce/callback':
+                
+                query_components = parse_qs(urlparse(self.path).query)
+                code = query_components.get("code", None)
 
-            if code:
-                authorization_code = code[0]  # Extract the authorization code
-                code_queue.put(authorization_code)  # Put the code in the queue
-                click.echo(f"Authorization code: {authorization_code}")
-                # Respond to the browser
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                self.wfile.write(b"Authentication successful. You can close this window.")
-                
-                code_ready_event.set()  # Signal that the code is ready
-                
-                # Shutdown the server on a different thread
-                click.echo("Initiating server shutdown...")
-                threading.Thread(target=httpd.shutdown).start()                
+                if code:
+                    global authorization_code
+                    authorization_code = code[0]  # Extract the authorization code
+                    code_queue.put(authorization_code)  # Put the code in the queue
+                    click.echo(f"Authorization code: {authorization_code}")
+                    # Respond to the browser
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(b"Authentication successful. You can close this window.")
+                    
+                    code_ready_event.set()  # Signal that the code is ready
+                    
+                    # Shutdown the server on a different thread
+                    click.echo("Initiating server shutdown...")
+                    threading.Thread(target=httpd.shutdown).start()
                    
     # Server setup
-    httpd = socketserver.TCPServer(("", PORT), RedirectHandler)
+    httpd = socketserver.TCPServer(("", server_port), RedirectHandler)
     server_thread = threading.Thread(target=httpd.serve_forever)
     server_thread.daemon = True
     server_thread.start()
 
-    click.echo(f"Server started at http://host.docker.internal:{PORT}")
+    click.echo(f"Server started at http://localhost:{server_port}")
     
     try:
         click.echo("Opening the authorization URL in your browser...")
