@@ -152,6 +152,7 @@ def write_pgpass_file(folder, hostname, port=5432, triplets=None):
     
     """
     Writes .pgpass for PostgreSQL connections in specified folder.
+    Automatically escapes colons and backslashes for pgpass formatting.
 
     Args:
         folder (str): Target directory.
@@ -171,8 +172,12 @@ def write_pgpass_file(folder, hostname, port=5432, triplets=None):
     with open(pgpass_file_path, 'w', newline='\n') as file:
         for database, username, password in triplets:
             
+            # escape backslash first to avoid escaping already escaped colons
+            escaped_password = password.replace("\\", "\\\\")  # replace \ with \\
+            escaped_password = escaped_password.replace(":", "\\:")  # replace : with \:
+            
             # format connection string for each database-username-password triplet
-            connection_string = f"{hostname}:{port}:{database}:{username}:{password}\n"
+            connection_string = f"{hostname}:{port}:{database}:{username}:{escaped_password}\n"
             
             file.write(connection_string)
 
